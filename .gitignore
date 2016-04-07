@@ -1,5 +1,5 @@
-
-# Created by https://www.gitignore.io/api/latex
+### ignore file used to store access code for submission tool ###
+access.code
 
 ### LaTeX ###
 *.acn
