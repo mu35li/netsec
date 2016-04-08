@@ -19,24 +19,27 @@
 \section*{Aufgabe 1}
 \addcontentsline{toc}{section}{Aufgabe 1}
 \subsection{Hilfe zu Befehlen}
-\subsubsection{man ls}
+\begin{enumerate}
+
+\item
 Wir haben uns mit \texttt{man ls} über den \texttt{ls} Befehl informiert.
 Interessant sind hierbei beispielsweise die Optionen \texttt{-a, ---all} um auch versteckte Dateien und Ordner anzuzeigen, oder auch \texttt{-lh} um die Größe von Dateien in lesbarer Form anzuzeigen.
-\subsubsection{ls \--\--help}
+\item
 Die Option \texttt{---help} gibt die Kurzreferenz für \texttt{ls} wieder. Diese ist unter Umständen etwas kürzer als die \textit{man page}.
-\subsubsection{script}
+\item
 Der Befehl \texttt{script} schreibt die Ausgaben des Terminals in eine Datei, die standardmäßig mit dem Namen \texttt{typescript} angelegt wird. Dies ist nützlich, da man nicht alle Eingaben mitschreiben muss und später auf diese zurückgreifen kann.
+\end{enumerate}
 \subsection{Benutzerkonten und -verwaltung}
 \begin{enumerate}
     \item Wir benutzen das Programm \texttt{adduser} um den User \texttt{labmate} hinzuzufügen.
-    \item Das Programm \texttt{groups} zeigt uns die groups eines users an:
+    \item Das Programm \texttt{groups} zeigt uns die Gruppen eines Users an:
         \begin{minted}{bash}
         $ groups labmate
         labmate : labmate
         \end{minted}
     \item Wir führen aus: \texttt{groupadd labortests}.
     \item \texttt{gpasswd -a labmate labortests}
-    \item Wir fügen den User einfach in die Admin Gruppe hinzu: \texttt{gpasswd -a labmate admin}
+    \item Wir fügen den User einfach der Admin Gruppe hinzu: \texttt{gpasswd -a labmate admin}
 \end{enumerate}
 
 \subsection{Datei- und Rechteverwaltung}
@@ -80,9 +83,9 @@ Der Befehl \texttt{script} schreibt die Ausgaben des Terminals in eine Datei, di
     \item \texttt{exit} oder einfach Ctrl+D
     \item Das Auslesen der Datei gelingt, da wir ja read-Permissions haben.
     \item Das Öffnen in nano funktioniert, das Speichern nach dem Editieren aber nicht,
-        da wir ja keine write-Permissions haben.
+        da wir keine write-Permissions haben.
     \item \texttt{cp /opt/test/index.html /opt/test/userindex.html}
-    \item Das Editieren der Datei gelingt, dass sie jetzt uns, also dem user \texttt{user}
+    \item Das Editieren der Datei gelingt, da sie jetzt uns, also dem user \texttt{user}
         gehört.
     \item Ja, wir können die Datei \textit{index.html} löschen; beim Löschen kommt
         es auf die write- und execute-Rechte des parent-directory an, nicht auf die Rechte
@@ -106,11 +109,11 @@ _________
 \begin{enumerate}
     \item \texttt{ps} gibt diverse Informationen zu laufenden Prozessen aus. \texttt{top}
         gibt eine grafische Übersicht über laufende Prozesse, sowie Nutzung des
-        Arbeitsspeichers.
+        Arbeitsspeichers, Auslastung der CPU und weiteren Systemressourcen.
     \item \texttt{\$ top} % kek
     \item Nach Ausführung des Befehls \texttt{cat /dev/urandom} zeigt \texttt{top} %kek
         für den Prozess \texttt{cat}, der von \textit{labmate} ausgeführt wurde, eine
-        erhöhten CPU-Last von 8\% sowie 0.1\% RAM-Nutzung an, was für \texttt{cat} sehr
+        erhöhte CPU-Last von 8\% sowie 0.1\% RAM-Nutzung an, was für \texttt{cat} sehr
         viel ist.
     \item Wir haben nicht die nötigen Permissions, um den Prozess eines anderen Users zu
         killen. Als \textit{root} können wir theoretisch alles killen (mit Ausnahme
@@ -124,6 +127,7 @@ _________
         # m h dom mon dow  command
         */5 * * * * /bin/date >> /home/labmate/zeitstempel.txt
         \end{minted}
+        Die eingetragene Zeile sieht beispielsweise so aus:\\ \texttt{Thu Apr  7 17:13:01 CEST 2016}
 \end{enumerate}
 \subsection{VMware-Tools installieren}
 \begin{itemize}
@@ -146,6 +150,6 @@ _________
         \item Calculator
         \item top
         \item Browser
-    \end{itemize}
+    \end{itemize}  
 \end{document}
 
