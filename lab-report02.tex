@@ -50,10 +50,33 @@ Wir mounten diese also mit \texttt{sudo mount /dev/sda1 /mnt} in den Ordner \tex
 \item Die Datei \textit{shadow} speichert die gehashten Passwörter der User im folgenden Format:\\
 <login name>:<encrypted password>:\allowbreak<date of last password change>:\allowbreak<minimum password age>:\allowbreak<maximum password age>:\allowbreak<password warning period>:\allowbreak<password inactivity period>:\allowbreak<account expiration date>:\allowbreak<reserved field>
 
-\item In beiden Datien gibt es neben diversen Usern für Services und Programme die User \texttt{root}, \texttt{georg} und \texttt{webadmin}.
+In beiden Datien gibt es neben diversen Usern für Services und Programme die User \texttt{root}, \texttt{georg} und \texttt{webadmin}.
 
 \item Der User \texttt{georg} gehört der Gruppe \texttt{admin} an. \texttt{webadmin} gehört den Gruppen \texttt{adm, dialout, cdrom, plugdev, lpadmin} \\  sowie \texttt{sambashare} an.
 \end{itemize}
 
+\subsection{Auslesen von Kennwörtern}
+\begin{itemize}
+\item Ein gesaltetes, gehashtes Passwort ist ein Passwort, das erst mit einem sogenannten Salt kombiniert und danach mit einer Hash-Funktion gehasht wurde. Eine Hash-Funktion verändert ihren Input deterministisch so, dass das Ergebnis nicht (ohne Weiteres) zurück zum Input transformiert werden kann. Der Salt kann eine beliebige Zeichenkombination sein, dessen Nutzung die Anwendung von Rainbow-Tables verhindern soll. Insbesondere erschwert der Hash das Reversieren des gehashten Wertes zum Original.
+\item Die \texttt{---incremental} Option führt einen Brute-Force-Angriff auf das Passwort auf, was sehr, sehr langsam ist aufgrund der vielen möglichen Kombinationen von Zeichen.
+\item Der Wörterbuch-Angriff funktioniert sehr viel schneller, und das Passwort lautet \textit{mockingbird}.
+\end{itemize}
+
+\subsection{Setzen von neuen Kennwörtern}
+Das Passwort von \textit{georg} konnte nicht mit \texttt{john} ermittelt werden, da es nicht in unserem (und daher wahrscheinlich auch in keinem anderen) Wörterbuch vorkommt.
+
+\section*{Aufgabe 2}
+\subsection{Angriffe mit Hashdatenbanken und Rainbow-Tables}
+Die ermittelten Kennwörter sind:
+\begin{itemize}
+\item ente
+\item ball
+\item borkeni
+\item ulardi
+\item avanti
+\end{itemize}
+Zur Idee von Black Hat:
+es gibt 62 alphanumerische Zeichen (26 Klein- und 26 Großbuchstaben, sowie 10 Ziffern).
+Das ergibt $$ \sum_1^{n=7} 62^i = 3.579.345.993.194 $$ mögliche Hashes, jeder mit einer Größe von 32 Byte, bzw. 33 Byte inklusive des Separators, was insgesamt $118,1$ TB belegt. Wer hier pedantisch sein möchte, könnte bemerken, dass wir ein Byte zu viel eingerechnet haben, da nach dem letzten Eintrag kein Separator benötigt wird. Trotzdem ist dies ein exorbitanter Speicherplatzbedarf, der uns auch nur weiterhilft, wenn das Passwort tatsächlich nur aus alphanumerischen Zeichen besteht. Die Rainbow-Tables dagegen belegen lediglich $12,2$ GB.
 \end{document}
 
