@@ -18,6 +18,42 @@
 
 \section*{Aufgabe 1}
 \addcontentsline{toc}{section}{Aufgabe 1}
+\subsection{Zugriff auf /etc/passwd und /etc/shadow des Webservers}
+\begin{itemize}
+\item Wir haben den Ordner mit dem \textbf{File Browser} in unseren vmware-Ordner kopiert.
+\item Wir änderen die Einstellungen unserer VM so, dass das grml-Abbild im virtuellen CD/DVD-Laufwerk liegt und setzen den Haken bei \textit{connect on power on}. Letzteres sorgt dafür, dass das image geladen wird, bevor Ubuntu gestartet wird.
+\item Nach dem Starten von \textit{grml} mounten wir die \textit{Root-Partition} nach \texttt{/mnt}. Mit \texttt{lsblk} ergibt sich aus dem output
+\begin{verbatim}
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+fd0      2:0    1     4K  0 disk
+sda      8:0    0    20G  0 disk 
+|-sda1   8:1    0  19.1G  0 part 
+|-sda2   8:2    0     1K  0 part 
+|-sda5   8:3    0   895M  0 part
+
+\end{verbatim}
+dass die \textit{Root-Partition} auf \texttt{sda1} liegt.
+Wir mounten diese also mit \texttt{sudo mount /dev/sda1 /mnt} in den Ordner \texttt{/mnt}.
+
+\item Die Datei \textit{passwd} enthält für jeden User eine Zeile, die aus folgenden Feldern besteht:
+\begin{itemize}
+\item Dem Login-Namen
+\item Dem verschlüsseltem Password des Users (optional)
+\item Der User-ID
+\item Der Gruppen-ID
+\item Dem User-Namen oder einem Kommentar
+\item Dem \textit{home directory} des Users
+\item Der \textit{shell} des Users (optional)
+
+\end{itemize}
+
+\item Die Datei \textit{shadow} speichert die gehashten Passwörter der User im folgenden Format:\\
+<login name>:<encrypted password>:\allowbreak<date of last password change>:\allowbreak<minimum password age>:\allowbreak<maximum password age>:\allowbreak<password warning period>:\allowbreak<password inactivity period>:\allowbreak<account expiration date>:\allowbreak<reserved field>
+
+\item In beiden Datien gibt es neben diversen Usern für Services und Programme die User \texttt{root}, \texttt{georg} und \texttt{webadmin}.
+
+\item Der User \texttt{georg} gehört der Gruppe \texttt{admin} an. \texttt{webadmin} gehört den Gruppen \texttt{adm, dialout, cdrom, plugdev, lpadmin} \\  sowie \texttt{sambashare} an.
+\end{itemize}
 
 \end{document}
 
