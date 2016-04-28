@@ -1,0 +1,9 @@
+#BlueJ class context
+comment0.params=
+comment0.target=Useradmin()
+comment0.text=\n\ Constructor\ for\ objects\ of\ class\ Useradmin\n
+comment1.params=username\ password
+comment1.target=void\ addUser(java.lang.String,\ char[])
+comment2.params=username\ password
+comment2.target=boolean\ checkUser(java.lang.String,\ char[])
+numComments=3
