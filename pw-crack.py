@@ -19,7 +19,7 @@ for i in range(1,7):
             elem_bytes += bytes(c, 'utf8')
         m = hashlib.md5()
         m.update(salt + elem_bytes)
-        if m.hexdigest() == str(target):
+        if m.hexdigest() == target.decode():
             print("success; found match!")
             print(elem_bytes)
             sys.stdout.flush()
