@@ -80,9 +80,21 @@ Die ermittelten Kennwörter sind:
 \end{itemize}
 Zur Idee von Black Hat:
 es gibt 62 alphanumerische Zeichen (26 Klein- und 26 Großbuchstaben, sowie 10 Ziffern).
-Das ergibt $$ \sum_1^{n=7} 62^i = 3.579.345.993.194 $$ mögliche Hashes, jeder mit einer Größe von 32 Byte, bzw. 33 Byte inklusive des Separators, was insgesamt $118,1$ TB belegt. Wer hier pedantisch sein möchte, könnte bemerken, dass wir ein Byte zu viel eingerechnet haben, da nach dem letzten Eintrag kein Separator benötigt wird. Trotzdem ist dies ein exorbitanter Speicherplatzbedarf, der uns auch nur weiterhilft, wenn das Passwort tatsächlich nur aus alphanumerischen Zeichen besteht. Die Rainbow-Tables dagegen belegen lediglich $12,2$ GB.
+Das ergibt $$ \sum_1^{n=7} 62^i = 3.579.345.993.194 $$ mögliche Hashes, jeder mit einer
+Größe von 32 Byte, bzw. 33 Byte inklusive des Separators, was insgesamt $118,1$ TB belegt.
+Wer hier pedantisch sein möchte, könnte bemerken, dass wir ein Byte zu viel eingerechnet
+haben, da nach dem letzten Eintrag kein Separator benötigt wird. Trotzdem ist dies ein
+exorbitanter Speicherplatzbedarf, der uns auch nur weiterhilft, wenn das Passwort
+tatsächlich nur aus alphanumerischen Zeichen besteht. Die Rainbow-Tables dagegen belegen
+lediglich $12,2$ GB.
 
 \subsection{Eigener Passwort-Cracker}
+Wir haben unseren Passwort-Cracker in Python geschrieben; er benutzt \texttt{hashlib},
+für die \textit{md5}-Funktion, und \texttt{itertools}, um alle Permutationen
+des Alphabets bis zur Länge 6 zu finden.
+Das Ergebnis ist: s1v3s.
+Der Source-Code befindet sich im Appendix.
+
 
 \end{document}
 
