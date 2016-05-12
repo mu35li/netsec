@@ -13,8 +13,7 @@ symbols = string.ascii_lowercase + '0123456789'
 for i in range(1, 7):
     for elem in itertools.product(symbols, repeat=i):
        elem_bytes = "".join(elem).encode()
-       m = hashlib.md5()
-       m.update(salt + elem_bytes)
+       m = hashlib.md5(salt + elem_bytes)
        if m.hexdigest() == target.decode():
            print("success; found match!")
            print(elem_bytes)
