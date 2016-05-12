@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[10pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[german]{babel}
 \usepackage[T1]{fontenc}
@@ -6,6 +6,9 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{minted}
+\usepackage[left=2cm, right=2cm]{geometry}
+\usepackage{url}
+
 
 \setcounter{section}{1}
 \author{Tronje Krabbe, Julian Deinert}
@@ -95,12 +98,130 @@ des Alphabets bis zur Länge 6 zu finden.
 Das Ergebnis ist: s1v3s.
 Der Source-Code befindet sich im Appendix.
 
+\subsection{Eigene Kennwort-Speicherfunktion in Java}
+
+Wir haben die Speicherfunktion mit der Hilfe von JBCrypt implementiert. Der Username wird mit dem gesalteten und gehashten Password, durch eine Pipe getrennt, in die Datei \texttt{passwords.txt} gespeichert. 
+
 
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \section*{Aufgabe 3}
 \addcontentsline{toc}{section}{Aufgabe 3}
+Im Home-Verzeichnis des Users \textit{/home/user} haben wir in der \texttt{.bash\_history} entdeckt, dass offenbar eine Konfigurationsdatei für Worpress mit \textit{jedit} editiert wurde. \textit{jedit} speichert diverse hilfreiche Informationen im Verzeichnis \textit{.jedit}. Sehen wir uns die Datei \texttt{history} in diesem Verzeichnis an, erkennen wir, dass eine Datenbank-Konfiguration vom clipboard eingefügt wurde. Dort steht ein User \texttt{bloguser} und ein Passwort drin, welches \texttt{Flugentenfederkiel/991199} lautet, und nicht funktioniert. \\
+Glücklicherweise gibt es zwei User auf dem System, der andere ist natürlich \textit{root}. Auch dieser besitzt ein \textit{.jedit} Verzeichnis, welches eine \texttt{history} enthält. In dieser sind zwei Einträge, die vom clipboard eingefügt wurden, zu finden. Sie enthalten zwei User/Passwort Paare, einmal \texttt{bloguser} und \texttt{Flugentenfederkiel\&10}, sowie \texttt{blog\_user} und \texttt{DUzvAu22cKatsXyV}. Beide dieser Kombinationen funktionieren ebenfalls nicht. Die beiden \textit{.jedit} Verzeichnisse enthalten ebenfalls jeweils eine \texttt{killring.xml}, wo gelöschte Zeichenketten gespeichert wurden. In der von \textit{root} stehen interessante Kandidaten für Passwörter, aber von denen funktionieren ebenfalls keine.
 
-TODO
+
+\newpage
+\section*{Appendix}
+\addcontentsline{toc}{section}{Appendix}
+\subsection*{Eigener Passwort-Cracker}
+\subsubsection*{pw-crack.py}
+\begin{minted}{python}
+#!/usr/bin/env python
+
+import sys
+import string
+import hashlib
+import itertools
+
+target = b'2b2935865b8a6749b0fd31697b467bd7'
+salt = b'8kofferradio'
+
+symbols = string.ascii_lowercase + '0123456789'
+
+for i in range(1, 7):
+    for elem in itertools.product(symbols, repeat=i):
+       elem_bytes = "".join(elem).encode()
+       m = hashlib.md5()
+       m.update(salt + elem_bytes)
+       if m.hexdigest() == target.decode():
+           print("success; found match!")
+           print(elem_bytes)
+           sys.stdout.flush()
+           sys.exit(0)
+
+print("failed; couldn't find a match!")
+sys.exit(1)
+
+\end{minted}
+\subsection*{Eigene Kennwort-Speicherfunktion in Java}
+\subsubsection*{Useradmin.java}
+\begin{minted}{java}
+import java.io.*;
+import java.util.Scanner;
+
+public class Useradmin implements Useradministration
+{
+    String file = "passwords.txt";
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        Useradmin useradmin = new Useradmin();
+        if (args[0].equals("addUser") && args[1].length() > 0) {
+            Scanner sc=new Scanner(System.in);
+            System.out.println("Please enter password...");
+            char[] password=sc.next().toCharArray();
+            useradmin.addUser(args[1], password);
+        } else if(args[0].equals("checkUser") && args[1].length() > 0) {
+            Scanner sc=new Scanner(System.in);
+            System.out.println("Please enter password...");
+            char[] password=sc.next().toCharArray();
+            System.out.println(useradmin.checkUser(args[1], password));
+        }
+    }
+    
+    
+    public void addUser(String username, char[] password) {
+        BCrypt bcryptObj = new BCrypt();
+        
+        String passwordString = new String(password);
+        String pw_hash = BCrypt.hashpw(passwordString, BCrypt.gensalt());
+        String line = username + ' ' + pw_hash;
+        try {
+            PrintWriter writer = new PrintWriter(
+            new FileOutputStream (
+            new File(file), 
+            true /* append = true */));
+            writer.println(line);
+            writer.close();
+        } catch (IOException e) {
+            
+        }
+        
+    }
+    
+    public boolean checkUser(String username, char[] password) {
+        try(BufferedReader br = new BufferedReader(new FileReader(file))) {
+            for(String line; (line = br.readLine()) != null; ) {
+                String[] parts = line.split(" ");
+                String passwordString = new String(password);
+            
+                if (parts[0].equals(username)){
+                    return BCrypt.checkpw(passwordString, parts[1]);
+                }
+            }
+        } catch (FileNotFoundException e) {
+        
+        } catch (IOException e) {
+        
+        }
+        return false;
+    }
+}
+\end{minted}
+
+\subsubsection*{Useradministraion.java}
+\begin{minted}{java}
+public interface Useradministration
+{
+    public void addUser(String username, char[] password);
+    public boolean checkUser(String username, char[] password);
+}
+\end{minted}
+
+\subsubsection*{BCrypt.java}
+\url{http://www.mindrot.org/projects/jBCrypt/}
 
 \end{document}
