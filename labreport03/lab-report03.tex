@@ -63,5 +63,29 @@ Wir haben uns mit \textit{netcat} zum Server verbunden und werden aufgefordert e
 \end{itemize}
 Wenn wir eine Serial angeben, die zufällig keine gültige ist, bekommen wir die Meldung \texttt{SERIAL\_VALID=0} zurück. Anhand dieser Information erstellen wir unseren TCP server so, dass bei jeder Serial die Meldung \texttt{SERIAL\_VALID=1} zurückgegeben wird.
 \subsection{Eigener License Server}
+\begin{minted}{python}
+#!/usr/bin/env python
+import socketserver as ss
 
+class LeetTCPHandler(ss.BaseRequestHandler):
+    def handle(self):
+        self.data = self.request.recv(1024).strip()
+        print(self.data)
+        if self.data == b'VERSION':
+            self.request.sendall(b"Numeric Serial Server Validation System 2.1a")
+        elif self.data[:6] == b'SERIAL':
+            self.request.sendall(b"SERIAL_VALID=1")
+        else:
+            self.request.sendall(b"Invalid command")
+
+
+if __name__ == "__main__":
+    HOST, PORT = "localhost", 1337
+
+    server = ss.TCPServer((HOST, PORT), LeetTCPHandler)
+
+    server.serve_forever()
+\end{minted}
+
+\subsection{•}
 \end{document}
