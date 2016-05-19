@@ -87,5 +87,39 @@ if __name__ == "__main__":
     server.serve_forever()
 \end{minted}
 
-\subsection{•}
+Außerdem ergänzen wir unser Host-File um diese Zeile:\\
+\texttt{127.0.0.1 license-server.svslab localhost} \\
+Nun können wir das Java-Programm ausführen, und es verbindet sich mit unserem
+eigenen TCP-Server, und akzeptiert eine beliebige Zahl als License-Key:
+\begin{verbatim}
+Your license has expired - please enter new license key!
+To order your new key for just 999.99$ call +1-555-we-rule
+
+Key: 123
+Numeric Serial Server Validation Sy
+Thanks for purchasing a new license!
+\end{verbatim}
+
+\subsection{Verhinderung des Angriffs}
+Eine naive Möglichkeit, den Spoof zu entdecken, wäre einfach, ein weniger offensichtiliches
+Schlüsselwort als Ausgabe nach erfolgreicher Überprüfung zu wählen. Momentan gibt
+der Server \textit{SERIAL\_VALID=0} zurück, wenn der Key falsch ist.
+Daraus ist leicht zu folgern, dass \textit{SERIAL\_VALID=1} die Ausgabe ist, die
+bei einem richtigen Key gegeben wird. Dies könnte man ändern um den Angriff
+zu erschweren.
+
+Eine sicherere Methode wäre, Public-Key-Cryptographie zu nutzen. Das Programm wird
+mit dem public-key des Servers sowie seinem eigenen private-key kompiliert.
+Der Server kennt den public-key des Programms. Die Kommunikation geschieht so,
+dass alles, was das Programm an den Server sendet, mit seinem public-key verschlüsselt ist.
+Der Server entschlüsselt die erhaltenen Daten mit seinem private-key, und
+verschlüsselt seine Ausgabe mit dem public-key des Programms.
+
+Auch hier liegt leider eine Schwierigkeit; hat jede Kopie des Programms das gleiche
+Key-Paar? Wenn nicht, woher weiß der Server, welchen Key er benutzen muss?
+Außerdem könnte man den Speicher des Programms untersuchen, während es läuft,
+oder einen Decompiler benutzen, um die Keys zu finden.
+
+\section{Aufgabe 4 License-Server}
+TODO
 \end{document}
