@@ -19,8 +19,8 @@
 \newpage
 
 
-\section*{Aufgabe 1}
-\addcontentsline{toc}{section}{Aufgabe 1}
+\section*{Aufgabe 1 HTTP}
+\addcontentsline{toc}{section}{Aufgabe 1 HTTP}
 \subsection{Telnet}
 Wir haben versucht uns mit dem Befehl \texttt{telnet} mit dem angegebenen Server zu verbinden.
 \begin{minted}{bash}
@@ -39,5 +39,29 @@ GET /de/inst/ab/svs/home.html HTTP/1.1
 
 \end{minted}
 Wir erhalten den HTTP-Fehlercode \texttt{400 Bad Request} zurück. Dementsprechend können wir auch keine CSS-Dateien anfordern.
+
+\setcounter{section}{2}
+\setcounter{subsection}{0}
+\section*{Aufgabe 2 SMTP}
+\addcontentsline{toc}{section}{Aufgabe 2 SMTP}
+\subsection{Mail Spoofing}
+Wir verbinden uns mittels \textit{Netcat} mit dem Mailserver \texttt{mailhost.informatik.uni-hamburg.de} auf Port 25. Nach dem wir die Felder \texttt{FROM}, \texttt{RCPT TO} sowie \texttt{DATA} gesetzt haben wird unsere Mail erfolgreich versendet.
+Der Empfänger kann anhand des Quelltextes erkennen, dass die Mail nicht von einem \textit{Authenticated sender} geschickt wurde.\\
+Es gibt keinen Unterschied ziwschen einer gespooften gmail oder informatik.uni-hamnburg Adresse, da beide Mails direkt beim Mailhost eingereicht wurden.
+
+\setcounter{section}{3}
+\setcounter{subsection}{0}
+\section*{Aufgabe 3 License Server}
+\addcontentsline{toc}{section}{Aufgabe 2 License Server}
+\subsection{DNS Spoofing}
+Wir haben uns mit \textit{netcat} zum Server verbunden und werden aufgefordert einen von 4 validen Commands einzugeben. Diese sind:
+\begin{itemize}
+\item help
+\item serial
+\item version
+\item quit
+\end{itemize}
+Wenn wir eine Serial angeben, die zufällig keine gültige ist, bekommen wir die Meldung \texttt{SERIAL\_VALID=0} zurück. Anhand dieser Information erstellen wir unseren TCP server so, dass bei jeder Serial die Meldung \texttt{SERIAL\_VALID=1} zurückgegeben wird.
+\subsection{Eigener License Server}
 
 \end{document}
