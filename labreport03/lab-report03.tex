@@ -1,0 +1,43 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[german]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{minted}
+\usepackage[left=2cm, right=2cm]{geometry}
+\usepackage{url}
+
+
+\setcounter{section}{1}
+\author{Tronje Krabbe, Julian Deinert}
+\title{Labreport 02}
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+
+\section*{Aufgabe 1}
+\addcontentsline{toc}{section}{Aufgabe 1}
+\subsection{Telnet}
+Wir haben versucht uns mit dem Befehl \texttt{telnet} mit dem angegebenen Server zu verbinden.
+\begin{minted}{bash}
+$ telnet www.inf.uni-hamburg.de 80                                                                       
+Trying 134.100.56.130...
+Connected to www.inf.uni-hamburg.de.
+Escape character is '^]'.
+
+GET /de/inst/ab/svs/home.html HTTP/1.1
+\end{minted}
+Als Antwort auf unseren GET-Request erhalten wir eine Website mit Returncode \texttt{302 Found}, die uns sagt, dass das Dokument nur mittels \textit{https} erreichbar ist. Da Telnet kein https kann, greifen wir auf openssl zurück.
+\begin{minted}{bash}
+$ openssl s_client -connect www.inf.uni-hamburg.de:443
+
+GET /de/inst/ab/svs/home.html HTTP/1.1
+
+\end{minted}
+Wir erhalten den HTTP-Fehlercode \texttt{400 Bad Request} zurück. Dementsprechend können wir auch keine CSS-Dateien anfordern.
+
+\end{document}
