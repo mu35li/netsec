@@ -1,4 +1,3 @@
-package javaLanguage.basic.socket;
 
 import java.awt.Color;
 import java.awt.BorderLayout;
