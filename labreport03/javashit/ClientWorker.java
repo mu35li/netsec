@@ -33,7 +33,7 @@ class ClientWorker implements Runnable {
         line = in.readLine();
 //Send data back to client
          out.println(line);
-         textArea.append(line);
+         textArea.append(line+"\n");
        } catch (IOException e) {
          System.out.println("Read failed");
          System.exit(-1);
