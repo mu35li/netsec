@@ -81,11 +81,18 @@ class SocketThrdServer extends JFrame{
     }
 
     public void broadCast(ClientWorker client, String message) {
-        for (ClientWorker worker : workers) {
-            if (!(worker.equals(client))) {
-                System.out.println("sending Message "+message+" to "+client.toString());
-                worker.sendMessage(message);
+        if (message != null) {
+            for (ClientWorker worker : workers) {
+                if (!(worker.equals(client))) {
+                    System.out.println("sending Message "+message+" to "+client.toString());
+                    worker.sendMessage(message);
+                }
             }
         }
+    }
+
+    public void unlistenWorker(ClientWorker client) {
+
+        workers.remove(client);
     }
 }
