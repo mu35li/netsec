@@ -124,12 +124,20 @@ oder einen Decompiler benutzen, um die Keys zu finden.
 TODO
 
 \section{Aufgabe 5 Implementieren eines TCP-Chats}
-\setcounter{subsection}{1}
+\setcounter{subsection}{0}
 \subsection{}
 Die vom Server ausgestrahlten URLs sind
 \url{http://www.oracle.com/technetwork/java/socket-140484.html} und
 \url{https://code.google.com/archive/p/example-of-servlet/source/default/source}.
 
 \subsection{}
+Wir kompilieren die Quelltext-Dateien \texttt{ClientWorker.java},
+\texttt{SocketThrdServer.java} und \texttt{SocketClient.java},
+um den Server und die Client ausführen zu können.
+Wenn wir in den Quelltext schauen, finden wir raus, dass der Server
+auf Port 4444 servt. Wenn wir ihn mit \texttt{telnet} ansprechen,
+wird unser Input immer noch einmal zurückgeschickt, und im GUI des Servers
+angezeigt. Da wir die gethreadete Variante nehmen, können wir auch gleichzeitig
+mit dem \texttt{SocketClient} Programm `chatten'.
 
 \end{document}
