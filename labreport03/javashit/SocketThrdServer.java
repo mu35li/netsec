@@ -5,6 +5,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.*;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -17,6 +18,7 @@ class SocketThrdServer extends JFrame{
     JPanel panel;
     JTextArea textArea = new JTextArea();
     ServerSocket server = null;
+    private List<ClientWorker> workers = new ArrayList<ClientWorker>();
 
        SocketThrdServer(){ //Begin Constructor
         panel = new JPanel();
@@ -37,10 +39,15 @@ class SocketThrdServer extends JFrame{
         while(true){
             ClientWorker w;
             try{
-                w = new ClientWorker(server.accept(), textArea);
+                w = new ClientWorker(server.accept(), textArea, this);
                 System.out.println(w.toString());
                 Thread t = new Thread(w);
                 t.start();
+                workers.add(w);
+                System.out.println("Added worker to list");
+                for (ClientWorker worker : workers) {
+                    System.out.println("worker:"+worker.toString());
+                }
             } catch (IOException e) {
                 System.out.println("Accept failed: 4444");
                 System.exit(-1);
@@ -71,5 +78,14 @@ class SocketThrdServer extends JFrame{
         frame.pack();
         frame.setVisible(true);
         frame.listenSocket();
+    }
+
+    public void broadCast(ClientWorker client, String message) {
+        for (ClientWorker worker : workers) {
+            if (!(worker.equals(client))) {
+                System.out.println("sending Message "+message+" to "+client.toString());
+                worker.sendMessage(message);
+            }
+        }
     }
 }
