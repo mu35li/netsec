@@ -19,6 +19,7 @@ class ClientWorker implements Runnable {
    this.server = server;
  }
  public void run(){
+  System.out.println(client.toString());
   String line;
   BufferedReader in = null;
   PrintWriter out = null;
@@ -40,7 +41,7 @@ class ClientWorker implements Runnable {
         out.println("Please enter a password");
         String password = in.readLine();
         textArea.append("User wants to register with username: "+username+" and password "+password+"\n");
-        boolean register = this.register(username, password);
+        boolean register = server.register(this, username, password);
         if (register == true) {
           out.println("registered successfully");
         }
@@ -53,8 +54,9 @@ class ClientWorker implements Runnable {
           out.println("Please enter a password");
           String password = in.readLine();
           textArea.append("User wants to login with username: "+username+" and password "+password+"\n");
-          boolean login = this.login(username, password);
+          boolean login = server.login(this, username, password);
           if (login == true) {
+            this.isLoggedIn = true;
             out.println("logged in successfully");
           }else{
             this.failedAttempts ++;
@@ -95,20 +97,10 @@ protected void finalize(){
     //program terminates and thread exits
   server.unlistenWorker(this);
 }
-private boolean register(String username, String password){
-  Useradmin useradminObj = new Useradmin();
-  useradminObj.addUser(username, password);
-  return true;
+
+public String getIP(){
+    return this.client.getInetAddress().toString();
 }
-private boolean login(String username, String password){
-  Useradmin useradminObj = new Useradmin();
-  boolean check = useradminObj.checkUser(username, password);
-  if (check == true) {
-    this.isLoggedIn = true;
-    return true;
-  }else{
-    return false;
-  }
-}
+
 }
 
