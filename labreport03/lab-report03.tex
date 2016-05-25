@@ -221,6 +221,38 @@ TODO
 
 \newpage
 \section{Appendix}
+
+\subsection{License bruteforce}
+\begin{minted}[linenos, fontsize=\small]{python}
+#!/usr/bin/python
+
+import itertools
+import sys
+import socket
+import time
+import string
+
+counter = 0
+i = 8
+s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s.connect(('10.1.1.1',1337))
+
+while True:
+    testwords = itertools.product(string.digits, repeat=i)
+
+    for word in testwords:
+        w = ''.join(word)
+        message = "serial="+w
+        s.send(message.encode('utf-8'))
+        response = s.recv(1024)
+        counter += 1
+
+        if response is "SERIAL_VALUE=1":
+            print("FOUND: {}".format(word))
+\end{minted}
+
+\newpage
+
 \subsection{SocketThrd.java}
 \begin{minted}[linenos, fontsize=\small]{java}
 import java.awt.BorderLayout;
