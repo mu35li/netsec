@@ -215,9 +215,42 @@ Diese werden in der \texttt{run()} Methode aufgerufen,
 wenn der User das Kommando ``register'' schickt. Der komplette
 Code findet sich im Appendix.
 
+\newpage
 \subsection{}
-TODO
-
+Wir bewegen die Methoden \texttt{login} und \texttt{register}
+in die Server Klasse, und ändern \texttt{login}:
+\begin{minted}{java}
+public boolean login(ClientWorker worker, String username, String password){
+    Useradmin useradminObj = new Useradmin();
+    boolean check = useradminObj.checkUser(username, password);
+    
+    final String ip = worker.getIP();
+    if (connectedIPs.get(ip) == true) {
+        connectedIPs.put(ip, false);
+        System.out.println("IP blocked: "+ip);
+        ActionListener unblockTimer = new ActionListener() {
+          public void actionPerformed(ActionEvent evt) {
+            unblockIP(ip);
+          }
+        };
+        Timer timer = new Timer(1000, unblockTimer);
+        timer.setRepeats(false);
+        timer.start();
+        if (check == true) {
+            return true;
+        }else{
+            return false;
+        }
+    }else{
+        System.out.println("blocked ip tried to login");
+        return false;
+    }
+}
+\end{minted}
+Wir erstellen einen ActionListener, der IPs unblocked,
+wenn ein Timer abgelaufen ist. Immer, wenn eine IP überprüft wird,
+wird so ein Timer gestartet. So ist gewährleistet, dass nicht öfter
+als einmal pro Sekunde ein Login-Versuch unternommen werden kann.
 
 \newpage
 \section{Appendix}
