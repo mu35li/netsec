@@ -3,6 +3,8 @@ import java.awt.Color;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.*;
@@ -11,6 +13,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.Timer;
+import javax.swing.Timer;
 
 class SocketThrdServer extends JFrame{
 
@@ -19,6 +23,7 @@ class SocketThrdServer extends JFrame{
     JTextArea textArea = new JTextArea();
     ServerSocket server = null;
     private List<ClientWorker> workers = new ArrayList<ClientWorker>();
+    private HashMap connectedIPs = new HashMap();
 
        SocketThrdServer(){ //Begin Constructor
         panel = new JPanel();
@@ -44,10 +49,10 @@ class SocketThrdServer extends JFrame{
                 Thread t = new Thread(w);
                 t.start();
                 workers.add(w);
+                String ip = w.getIP();
+                connectedIPs.put(ip, true);
+                System.out.println("ip is: "+ip);
                 System.out.println("Added worker to list");
-                for (ClientWorker worker : workers) {
-                    System.out.println("worker:"+worker.toString());
-                }
             } catch (IOException e) {
                 System.out.println("Accept failed: 4444");
                 System.exit(-1);
@@ -94,5 +99,43 @@ class SocketThrdServer extends JFrame{
     public void unlistenWorker(ClientWorker client) {
 
         workers.remove(client);
+    }
+
+    public boolean register(ClientWorker worker, String username, String password){
+        Useradmin useradminObj = new Useradmin();
+        useradminObj.addUser(username, password);
+        return true;
+    }
+
+    public boolean login(ClientWorker worker, String username, String password){
+        Useradmin useradminObj = new Useradmin();
+        boolean check = useradminObj.checkUser(username, password);
+        
+        final String ip = worker.getIP();
+        if (connectedIPs.get(ip) == true) {
+            connectedIPs.put(ip, false);
+            System.out.println("IP blocked: "+ip);
+            ActionListener unblockTimer = new ActionListener() {
+              public void actionPerformed(ActionEvent evt) {
+                unblockIP(ip);
+              }
+            };
+            Timer timer = new Timer(1000, unblockTimer);
+            timer.setRepeats(false);
+            timer.start();
+            if (check == true) {
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            System.out.println("blocked ip tried to login");
+            return false;
+        }
+    }
+
+    private void unblockIP(String ip) {
+        System.out.println("IP unblocked: "+ip);
+        connectedIPs.put(ip, true);
     }
 }
