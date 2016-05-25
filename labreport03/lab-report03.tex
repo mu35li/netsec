@@ -121,7 +121,28 @@ Außerdem könnte man den Speicher des Programms untersuchen, während es läuft
 oder einen Decompiler benutzen, um die Keys zu finden.
 
 \section{Aufgabe 4 License-Server}
-TODO
+\setcounter{subsection}{0}
+\subsection{}
+Unser Programm ist im Anhang zu finden.
+
+\subsection{}
+Es gibt mehrere Möglichkeiten, so einen Service gegen Brute-Force Angriffe zu schützen.
+Von Anfang an ist es eine gute Idee, Authentifizierungsversuche zeitlich zu begrenzen.
+Wenn nur eine Validierung pro Sekunde zugelassen wird, merkt ein User mit einem validen
+Key praktisch keinen Unterschied, ein Brute-Force Angriff hingegen dauert dann deutlich länger.
+Weiterhin kann man IPs, die eine gewissen Anzahl Fehlversuche hinter sich haben, weiter
+verlangsamt bedienen, oder gar ganz blockieren.
+
+\subsection{}
+Wir haben folgende Zahlen haben wir rausgefunden:
+90877300,
+31337000,
+21935900,
+62674000,
+18802200.
+Wenn man den größten gemeinsamen Teiler dieser Zahlen berechnet,
+erhält man 3133700. Und tatsächlich akzeptiert der Server alle Zahlen,
+die nach der Formel $(n \cdot 3133700) \mod 10^8$ generiert wurden.
 
 \section{Aufgabe 5 Implementieren eines TCP-Chats}
 \setcounter{subsection}{0}
