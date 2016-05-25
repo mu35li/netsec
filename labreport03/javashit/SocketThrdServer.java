@@ -120,7 +120,7 @@ class SocketThrdServer extends JFrame{
                 unblockIP(ip);
               }
             };
-            Timer timer = new Timer(10000, unblockTimer);
+            Timer timer = new Timer(1000, unblockTimer);
             timer.setRepeats(false);
             timer.start();
             if (check == true) {
