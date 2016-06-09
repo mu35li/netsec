@@ -8,7 +8,21 @@
 \usepackage{minted}
 \usepackage[left=2cm, right=2cm]{geometry}
 \usepackage{url}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
 
+\lstdefinestyle{BashInputStyle}{
+  language=bash,
+  basicstyle=\small\sffamily,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=tb,
+  columns=fullflexible,
+  backgroundcolor=\color{yellow!20},
+  linewidth=\linewidth,
+  xleftmargin=1mm
+}
 
 \setcounter{section}{1}
 \author{Julian Deinert, Tronje Krabbe}
@@ -41,16 +55,140 @@ All diese Informationen können wieder mit \textit{ip} herausgefunden werden.
 \addcontentsline{toc}{section}{2. Sniffing mit tcpdump}
 \setcounter{subsection}{1}
 
-\subsection{}
 
+\begin{enumerate}
+        \item[\bf 2.] Um den Anforderungen der Aufgabe gerecht zu werden, müssen
+                      wir mehrere Optionen von tcpdump kombinieren, sodass wir
+                      schlussendlich folgenden Befehl erhalten:
+                      \begin{lstlisting}[style=BashInputStyle]
+root@routingvm# tcpdump -p -i eth1 -n ``port 53 and host 192.168.254.44''
+                      \end{lstlisting}
+
+                      \begin{itemize}
+                          \item \texttt{-p} deaktiviert den promiscuous mode, da
+                                er von der Virtualisierungsumgebung nicht
+                                bereitgestellt werden kann.
+                          \item \texttt{-i eth0} beschränkt die Aufzeichnung
+                                auf das Interface eth1, über das die Surfing-VM
+                                angeschlossen ist
+                          \item \texttt{-n} deaktiviert die Auflösung von IP-Adressen
+                                zu einem Hostnamen.
+                          \item \texttt{port 53} filtert nur nach Paketen, die
+                                über Port 53, der DNS zugeordnet ist, gesendet bzw.
+                                empfangen werden.
+                          \item \texttt{host 192.168.254.44} beschränkt auf Pakete,
+                                deren Ziel oder Ausgang mit der IP der Surfing-VM
+                                übereinstimmt.
+                      \end{itemize}
+
+                      Die Nachrichten, die uns angezeigt werden, protokollieren
+                      den DNS-Verkehr, an dem die Surfing-VM beteiligt ist, d.h.
+                      sowohl Anfragen als auch Antworten.
+
+                      Das Format der Antworten kann wie folgt beschrieben werden:
+
+                      \texttt{timestamp | source ip | destination ip | dns transaction id | answer records/NS records/additional records | answer}
+
+                      \begin{itemize}
+                          \item \texttt{timestamp} ist die Zeit und das Datum, an dem das Paket
+                                erfasst wurde
+                          \item \texttt{source ip} ist die Quell-IP-Adresse des Pakets
+                          \item \texttt{destination ip} ist die Ziel-IP des Pakets
+                          \item \texttt{dns transaction id} ist eine eindeutige ID,
+                                die Bestandteil des DNS-Protokolls ist und mit der
+                                Transaktionen identifiziert werden
+                          \item \texttt{answer records} ist die Anzahl an DNS records,
+                                die als Antwort zur Verfügung gestellt werden
+                          \item \texttt{NS records} ist die Anzahl an DNS records,
+                                die die zuständigen Nameserver angeben
+                          \item \texttt{additional records} ist die Anzahl an DNS records,
+                                die zusätzlich zur Verfügung stehen.
+                          \item \texttt{answer} ist dann schließlich die Antwort, die der
+                                Nameserver zurückliefert, d.h. entweder eine IP-Adresse
+                                (A/AAAA record), ein weiterer Hostname (CNAME record)
+                                oder weitere record typen.
+                      \end{itemize}
+
+        \item[\bf 3.] Abgewandelt von \textbf{2.} verwenden wir hier folgenden Befehl:
+                      \begin{lstlisting}[style=BashInputStyle]
+root@routingvm# tcpdump -p -i eth1 -n ``(port 80 or port 443) and src host 192.168.254.44''
+                      \end{lstlisting}
+
+                      Wir spezifizieren hier zwei Ports, die ``verodert'' werden,
+                      und legen fest, dass die \textbf{Quell}-IP die der Surfing-VM
+                      sein muss.
+
+        \item[\bf 4.] Zur Ausgabe der Payload fügen wir den Parameter \texttt{-A}
+                      hinzu. Dadurch wird uns der Payload der Pakete in ASCII
+                      konvertiert ausgegeben.
+
+                      Bisher werden Pakete jedoch nur verkürzt ausgegeben. Dies
+                      rührt daher, dass tcpdump als voreingestellte Paketlänge,
+                      die sog. \textit{snap length} 68 bytes verwendet. Wir fügen
+                      also als Parameter \texttt{-s 1514} hinzu. Damit schneiden
+                      wir die kompletten 1500 bytes des Pakets plus 14 bytes Layer 2
+                      Header mit.
+
+        \item[\bf 5.] HTTP Basic Authentication über unverschlüsseltes HTTP ist
+                      inhärent unsicher, was wir auch sehen wenn wir den Traffic
+                      mitschneiden. Im \texttt{Authorization}-Header werden die
+                      Anmeldedaten im Format \texttt{username:password} als base64
+                      codiert übertragen und lassen sich sehr leicht mit
+                      \begin{lstlisting}[style=BashInputStyle]
+root@routingvm# echo -n ``YWxpY2U6c2VocmdlaGVpbQ=='' | base64 -d
+                      \end{lstlisting}
+                      decodieren.
+    \end{enumerate}
 
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \section*{Aufgabe 3}
 
+\begin{enumerate}[\bf 1.]
+        \item Zur Demonstration schneiden wir alle HTTP-Interaktionen mit \texttt{heise.de}
+              mit. Die Seite wurde gewählt, da sie nur HTTP unterstützt und HTTPS
+              mit \texttt{urlsnarf} nicht mitzuschneiden ist.
+
+              Wir starten \texttt{urlsnarf} mit dem Befehl
+              \begin{lstlisting}[style=BashInputStyle]
+root@routingvm# urlsnarf -n -i eth1 ``.*heise\.de''
+              \end{lstlisting}
+
+              Die Parameter sind dabei weitestgehend deckungsgleich mit denen
+              von tcpdump. Der letzte Parameter ist ein regulärer Ausdruck, der
+              spezifiziert welche URLs mitgeschnitten werden sollen.
+
+              Der Output erfolgt dabei im \textit{Common Log Format}, wie es z.B.
+              auch nginx benutzt.
+
+        \item Mit Hilfe von \texttt{dsniff} können wir uns das Passwort aus \textbf{2.5}
+              direkt anzeigen lassen. Dazu starten wir \texttt{dsniff} wie folgt:
+
+              \begin{lstlisting}[style=BashInputStyle]
+root@routingvm# dsniff -n -i eth1 'port 80'
+              \end{lstlisting}
+
+              Auch hier sind die Parameter wieder deckungsgleich mit tcpdump.
+              Rufen wir nun die Testseite auf und authentifizieren uns mit
+              \texttt{alice:sehrgeheim}, so zeigt uns dsniff diese als Output an.
+    \end{enumerate}
+
 \section*{Aufgabe 4}
 \setcounter{subsection}{0}
 
+\begin{enumerate}[\bf 1.]
+        \item[\bf 2.] Ein Capture-Filter spezifiziert, welche Pakete tatsächlich
+                      mitgeschnitten werden, während ein Display-Filter alle
+                      Pakete mitschneidet, jedoch die Anzeige der Pakete filtert.
+
+        \item[\bf 4.] Schlauerweise schneiden wir nur Traffic mit, der auf dem
+                      Interface \texttt{eth1} gesendet bzw. empfangen wird,
+                      da über dieses Interface die Surfing-VM angebunden ist.
+
+                      Unabhängig vom Interface können wir auch einen Capture-Filter
+                      einrichten, der den Mitschnitt auf die IP-Adresse der
+                      Surfing-VM beschränkt.
+    \end{enumerate}
 \section*{Aufgabe 5}
 \setcounter{subsection}{0}
 
