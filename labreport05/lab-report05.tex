@@ -19,13 +19,38 @@
 \newpage
 
 
-\section*{1. }
-\addcontentsline{toc}{section}{1. }
+\section*{1. Netzwerkeinstellungen }
+\addcontentsline{toc}{section}{1. Netzwerkeinstellungen}
 \setcounter{subsection}{1}
 
-\subsection{}
+\subsection{Ermitteln der Netzwerkkonfiguration}
+\begin{itemize}
+\item Die ClientVM hat die IP-Adresse \texttt{192.168.254.44} und das Standardgateway \texttt{192.168.254.2} außerdem verwendet sie den DNS-Server \texttt{10.1.1.1}.
 
+\item Die RouterVM besitzt für das Interface \textit{eth0} die IP-Adresse \texttt{172.16.137.222} und für das Interface \textit{eth1} die IP-Adresse \texttt{192.168.254.2}.
 
+\item Die ServerVM hat die IP-Adresse \texttt{172.16.137.144}.
+\end{itemize}
+
+\setcounter{section}{2}
+\section*{2. Absichern eines Einzelplatzrechners mit iptables (ClientVM)}
+\addcontentsline{toc}{section}{2. Absichern eines Einzelplatzrechners mit iptables (ClientVM)}
+\setcounter{subsection}{0}
+\subsection{Löschen aller Firewallregeln}
+
+Wir richten die default policy wieder ein und flushen alle Chains  in der \textit{filter-}, \textit{nat-} und \textit{mangle-table}.\begin{minted}{php}
+# iptables -P INPUT ACCEPT
+# iptables -P FORWARD ACCEPT
+# iptables -P OUTPUT ACCEPT
+
+# iptables -t nat -F
+# iptables -t mangle -F
+# iptables -F
+# iptables -X
+\end{minted}
+Danach installieren wir mit \texttt{apt-get} das Paket \texttt{openssh-server}.
+
+\subsection{Entwerfen eines Konzepts}
 \newpage
 \section*{Appendix}
 \end{document}
