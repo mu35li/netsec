@@ -51,6 +51,11 @@ Wir richten die default policy wieder ein und flushen alle Chains  in der \texti
 Danach installieren wir mit \texttt{apt-get} das Paket \texttt{openssh-server}.
 
 \subsection{Entwerfen eines Konzepts}
+Wir wollen Traffic durch Port \texttt{80} und \texttt{443} generell erlauben und Traffic durch Port \texttt{22} nur aus dem lokalen Netzwerk zulassen. Hierzu setzen wir die folgenden IP-Table Einträge:
+
+\begin{minted}{php}
+
+\end{minted}
 \newpage
 \section*{Appendix}
 \end{document}
