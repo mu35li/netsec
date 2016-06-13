@@ -38,7 +38,8 @@
 \setcounter{subsection}{0}
 \subsection{Löschen aller Firewallregeln}
 
-Wir richten die default policy wieder ein und flushen alle Chains  in der \textit{filter-}, \textit{nat-} und \textit{mangle-table}.\begin{minted}{php}
+Wir richten die default policy wieder ein und flushen alle Chains  in der \textit{filter-}, \textit{nat-} und \textit{mangle-table}.
+\begin{minted}{php}
 # iptables -P INPUT ACCEPT
 # iptables -P FORWARD ACCEPT
 # iptables -P OUTPUT ACCEPT
@@ -52,10 +53,99 @@ Danach installieren wir mit \texttt{apt-get} das Paket \texttt{openssh-server}.
 
 \subsection{Entwerfen eines Konzepts}
 Wir wollen Traffic durch Port \texttt{80} und \texttt{443} generell erlauben und Traffic durch Port \texttt{22} nur aus dem lokalen Netzwerk zulassen. Hierzu setzen wir die folgenden IP-Table Einträge:
+Zunächst ändern wir die defaults targets der drei chains \texttt{INPUT}, \texttt{OUTPUT} und \texttt{FORWARD} zu \texttt{DROP} (\texttt{REJECT} geht nicht;
+der Versuch, \texttt{REJECT} als target zu nutzen endet mit der Fehlermeldung \textit{iptables: bad policy name. Run `dmesg' for more information.}).
 
-\begin{minted}{php}
+\begin{verbatim}
+# iptables -P INPUT DROP
+# iptables -P OUTPUT DROP
+# iptables -P FORWARD DROP
+\end{verbatim}
 
-\end{minted}
+Nun ist also gar keine Kommunikation mehr möglich. \texttt{ping} z.B. schlägt fehl mit \textit{ping: sendmsg: Operation not permitted}.
+So weit, so gut. Nun wollen wir aber einige Kommunikation erlauben. Zunächst kümmern wir uns um \textit{ssh}:
+
+\begin{verbatim}
+# iptables -A INPUT -i eth0 -p tcp -s 192.168.254.0/24 --dport 22 -j ACCEPT
+# iptables -A OUTPUT -o eth0 -p tcp --sport 22 -j ACCEPT
+\end{verbatim}
+
+Nach diesen Befehlen kann man sich aus dem lokalen 192.168.254er Netz auf die Client-VM per \textit{ssh} verbinden. Lässt man den \texttt{-s} Switch weg,
+kann man sich von überall auf die VM \textit{ssh}en.
+
+Nun brauchen wir noch HTTP (und HTTPS); wir erlauben eingehenden tcp traffic, der von einem Port 80 kommt,
+und ausgehenden tcp traffic, der zu einem Port 80 will (bzw. Port 443 für HTTPS):
+
+\begin{verbatim}
+# iptables -A OUTPUT -o eth0 -p tcp --dport 80 -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 80 -j ACCEPT
+
+# iptables -A OUTPUT -o eth0 -p tcp --dport 443 -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 443 -j ACCEPT
+\end{verbatim}
+
+Jetzt brauchen wir noch Regeln für ICMP:
+
+\begin{verbatim}
+# iptables -A INPUT -p icmp -j ACCEPT
+# iptables -A OUTPUT -p icmp -j ACCEPT
+\end{verbatim}
+
+Wenn man lediglich z.B. pings (und pongs) erlauben will, würde man noch die \texttt{--icmp-type} flag auf einen entsprechenden
+Wert setzen. In der Aufgabe wurde allerdings nur ``ICMP Nachrichten'' spezifiziert, also erlauben wir alles, was ICMP ist.
+
+\subsection{Prüfen der Korrektheit der Regeln}
+\begin{itemize}
+\item Von der RouterVM aus können wir eine SSH-Verbindung zur ClientVM aufbauen. Von Client- zu RouterVM geht dies nicht.
+	  Es soll ja nur eingehendes SSH erlaubt sein.
+\item Wir starten einen netcat server in der ClientVM auf Port 5555 mit \texttt{nc -l 5555} (mit GNU netcat hätten wir noch die -p Flag nehmen müssen).
+	  Jetzt versuchen wir, uns damit von der RouterVM aus zu verbinden: \texttt{nc 192.168.254.44 5555}. Komischerweise ergibt dies keine Fehlermeldung,
+	  aber der netcat `client' terminiert nach einer kurzen Zeit. In dieser Zeit können keine Nachrichten ausgetauscht werden.
+	  Dies ist natürlich gewollt; wir wollen nur HTTP(S), SSH und ICMP zulassen. Port 5555 hat mit keiner dieser Protokolle zu tun, und wird deshalb
+	  nicht durchgelassen.
+\item Da REJECT nicht als target für die default chains erlaubt ist, können wir dies nicht beobachten. REJECT verhält sich aber so:
+	  Während DROP das Paket einfach fallen lässt (Zitat man-page: ``DROP means to drop the packet on the floor.''), sendet REJECT
+	  noch eine Nachricht, dass das Paket eben rejected wurde.
+\end{itemize}
+
+\subsection{Stateful Filtering}
+Zunächst: \texttt{\# iptables -F}.
+Nun erlauben wir wieder SSH:
+
+\begin{verbatim}
+# iptables -A OUTPUT -o eth0 -p tcp -d 192.168.254.0/24 --dport 22 --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 22 --state ESTABLISHED -j ACCEPT
+\end{verbatim}
+Nun beachten wir auch den state der Verbindung, und akzeptieren eingehende Pakete nur, wenn sie Teil einer bereits bestehenden Verbindung sind.
+Ähnlich für HTTP(S):
+
+\begin{verbatim}
+# iptables -A OUTPUT -o eth0 -p tcp --dport 80 --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 80 --state ESTABLISHED -j ACCEPT
+
+# iptables -A OUTPUT -o eth0 -p tcp --dport 443 --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 443 --state ESTABLISHED -j ACCEPT
+\end{verbatim}
+
+Die Regeln für ICMP bleiben gleich; hier gibt es keine bestehenden Verbindungen o.ä.
+\\
+\\
+Stateful filtering kann flexibler und übersichtlicher sein. Man beachte folgende Regel:
+\texttt{iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT}. Zusammen mit einer `DROP' policy
+sichert sie ein System relativ gut ab. Eingehende Pakete werden nur akzeptiert, wenn sie bereits Teil einer etablierten oder verwandten
+Verbindung sind.\\
+Will man jedoch spezifischer filtern, kommt es immer darauf an, was genau erreicht werden soll; dann ist der state eines Pakets
+nur eine weitere Variable, nach der gefiltert werden kann, und sollte nicht pauschal bevorzugt werden, wenn es nicht nötig ist.
+
+
+\setcounter{section}{3}
+\section*{3. Absichern eines Netzwerks (RouterVM)}
+\addcontentsline{toc}{section}{3. Absichern eines Netzwerks (RouterVM)}
+\setcounter{subsection}{0}
+
+\subsection{Dynamisches NAT}
+TODO
+
 \newpage
 \section*{Appendix}
 \end{document}
