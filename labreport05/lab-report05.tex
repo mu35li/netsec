@@ -113,18 +113,18 @@ Zunächst: \texttt{\# iptables -F}.
 Nun erlauben wir wieder SSH:
 
 \begin{verbatim}
-# iptables -A OUTPUT -o eth0 -p tcp -d 192.168.254.0/24 --dport 22 --state NEW,ESTABLISHED -j ACCEPT
-# iptables -A INPUT -i eth0 -p tcp --sport 22 --state ESTABLISHED -j ACCEPT
+# iptables -A OUTPUT -o eth0 -p tcp -d 192.168.254.0/24 --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
 \end{verbatim}
 Nun beachten wir auch den state der Verbindung, und akzeptieren eingehende Pakete nur, wenn sie Teil einer bereits bestehenden Verbindung sind.
 Ähnlich für HTTP(S):
 
 \begin{verbatim}
-# iptables -A OUTPUT -o eth0 -p tcp --dport 80 --state NEW,ESTABLISHED -j ACCEPT
-# iptables -A INPUT -i eth0 -p tcp --sport 80 --state ESTABLISHED -j ACCEPT
+# iptables -A OUTPUT -o eth0 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 80 -m state --state ESTABLISHED -j ACCEPT
 
-# iptables -A OUTPUT -o eth0 -p tcp --dport 443 --state NEW,ESTABLISHED -j ACCEPT
-# iptables -A INPUT -i eth0 -p tcp --sport 443 --state ESTABLISHED -j ACCEPT
+# iptables -A OUTPUT -o eth0 -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A INPUT -i eth0 -p tcp --sport 443 -m state --state ESTABLISHED -j ACCEPT
 \end{verbatim}
 
 Die Regeln für ICMP bleiben gleich; hier gibt es keine bestehenden Verbindungen o.ä.
@@ -143,8 +143,35 @@ nur eine weitere Variable, nach der gefiltert werden kann, und sollte nicht paus
 \addcontentsline{toc}{section}{3. Absichern eines Netzwerks (RouterVM)}
 \setcounter{subsection}{0}
 
-\subsection{Dynamisches NAT}
-TODO
+\subsection{Dynamisches NAT} % 3.1
+
+Der \texttt{iptables} Aufruf in \textit{/etc/rc.local} lautet:
+\begin{verbatim}
+iptables -t nat -A POSTROUTING -o eth0 -s 192.168.254.0/24 -j MASQUERADE
+\end{verbatim}
+Der \texttt{-t nat} Switch wählt die \textit{nat} Table aus, der \texttt{-A POSTROUTING} Switch erstellt
+eine neue Regel, um ausgehende Packets zu verändern. \texttt{-o eth0} wählt das Out-Interface aus, der 
+\texttt{-s} Switch die Quell-Adresse. \texttt{-j MASQUERADE} spezifiziert das \texttt{MASQUERADE} target,
+welches dafür sorgt, dass Traffic unverändert an das Interface fließt. Insgesamt sorgt die Regel also
+dafür, dass Traffic aus dem \texttt{192.168.254.0/24} Netz zum \texttt{eth0} Interface durchgelassen wird.
+
+\subsection{} % 3.2
+\begin{itemize}
+    \item Wir können die ServerVM von der ClientVM aus \textit{ping}en.
+    \item Von der ServerVM aus können wir nicht die ClientVM ansprechen, da die ServerVM im \texttt{172.16.137.0/24} Netz liegt.
+        Tatsächlich kommen pings von der ServerVM in das \texttt{192.168.254.0/24} Netz scheinbar gar nicht in der RouterVM an.
+        WireShark zeigt nämlich keine entsprechenden Pakete an. Von der ClientVM zur ServerVM werden die Request und Response
+        Pakete korrekt aufgelistet (von Client zu Router, Router zu Server, und wieder zurück).
+\end{itemize}
+
+\subsection{} % 3.3
+
+Wir filtern HTTP-Requests nach \texttt{10.1.1.2} und \texttt{172.16.137.144} raus, und lassen alle anderen durch:
+\begin{verbatim}
+# iptables -A FORWARD -p tcp -d 10.1.1.2 --dport 80 -j DROP
+# iptables -A FORWARD -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+\end{verbatim}
+
 
 \newpage
 \section*{Appendix}
