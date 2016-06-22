@@ -177,6 +177,13 @@ Wir filtern HTTP-Requests auf Port 80 und 443 nach \texttt{10.1.1.2} und \texttt
 # iptables -A FORWARD -j DROP
 \end{verbatim}
 
+\subsection{Anpassung für SSH-Verbindung} % 3.4
+
+Wir möchten eine Verbindung zur ServerVM unter \texttt{172.16.137.144} auf Port \texttt{22} ermöglichen. Hierzu fügen wir an Stelle 7 eine neue Regel in die \textit{FORWARD CHAIN} ein. Wir lassen hier außerdem das Protokoll weg, damit auch UDP-Verbindungen möglich sind.
+\begin{verbatim}
+# iptables -I FORWARD 7 -d 172.16.137.144 --dport 22 -j ACCEPT
+\end{verbatim}
+
 
 \newpage
 \section*{Appendix}
