@@ -191,6 +191,17 @@ Wir leiten den Port \texttt{5022} der RouterVM auf den Port \texttt{22} der Clie
 # iptables -t nat -A -p tcp --dport 5022 -j DNAT --to-destination 192.168.254.44:22 
 \end{verbatim}
 
+\subsection{Statische NAT-Regel} % 3.6
+
+Wir wählen uns eine neue IP-Adresse aus dem gleichen Subnetz in der auch die ServerVM ist aus.
+\begin{verbatim}
+# ifconfig eth0:1 172.16.137.225 netmask 255.255.255.0
+\end{verbatim}
+Alle Anfragen auf die IP \texttt{172.16.137.225} sollen nun zur ClientVM durchgereicht werden.
+\begin{verbatim}
+# iptables -t nat -A PREROUTING -d 172.16.137.225 -j DNAT --to-destination 192.168.254.44
+\end{verbatim}
+
 
 
 \newpage
