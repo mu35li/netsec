@@ -8,6 +8,7 @@
 \usepackage{minted}
 \usepackage[left=2cm, right=2cm]{geometry}
 \usepackage{url}
+\usepackage{graphicx}
 
 
 \setcounter{section}{1}
@@ -16,7 +17,9 @@
 \begin{document}
 \maketitle
 \tableofcontents
+\thispagestyle{empty}
 \newpage
+\setcounter{page}{1}
 
 
 \section*{1. Netzwerkeinstellungen }
@@ -202,8 +205,38 @@ Alle Anfragen auf die IP \texttt{172.16.137.225} sollen nun zur ClientVM durchge
 # iptables -t nat -A PREROUTING -d 172.16.137.225 -j DNAT --to-destination 192.168.254.44
 \end{verbatim}
 
+\setcounter{section}{4}
+\section*{4. SSH-Tunnel}
+\addcontentsline{toc}{section}{4. SSH-Tunnel}
+\setcounter{subsection}{0}
 
+\subsection{Konfigurieren der Firewall}
+\begin{verbatim}
+# iptables -A FORWARD 0s 192.168.254.44 -d 172.16.137.144 -p tcp --dport 22 -j ACCEPT
+# iptables -A FORWARD -s 192.168.254.44/32 -p udp -m udp --dport 53 -j ACCEPT
+# iptables -A FORWARD -s 192.168.254.44/32 -j DROP
+\end{verbatim}
+
+\subsection{SSH-Tunnel}
+Wir richten den SSH-Tunnel wie folgt ein.
+\begin{verbatim}
+$ ssh -L 8000:localhost:80 user@172.16.137.144
+\end{verbatim}
+Wireshark bestätigt die Korrektheit des Befehls.
+
+\subsection{Tunnel ins Internet}
+\begin{verbatim}
+$ ssh -D licalhost:5555 user@172.16.137.144
+\end{verbatim}
+Konfiguration von Firefox im Appendix.
+
+\subsection{Netcat}
+\begin{verbatim}
+# nc 192.168.254.44 5555
+\end{verbatim}
 
 \newpage
 \section*{Appendix}
+\subsection*{4.3 Konfiguration von Firefox}
+\includegraphics[width=\textwidth]{images/image.png}
 \end{document}
