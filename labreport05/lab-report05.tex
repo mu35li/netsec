@@ -304,7 +304,9 @@ Wir erlauben nur tcp Port \texttt{80} und udp Port \texttt{53}
 \end{verbatim}
 
 \subsection{Umgehen der Filterrregeln}
-Wir ändern in \texttt{etc/ssh/sshd_config} den Port von \texttt{22} auf \texttt{80}.
+Wir ändern in \texttt{etc/ssh/sshd\_config} den Port von \texttt{22} auf \texttt{80} und starten den Service mit \texttt{service ssh restart} neu, nachdem wir den bereits auf Port \texttt{80} laufenden Apache HTTP-Server gestoppt haben.
+
+\subsection{Squid}
 
 
 
