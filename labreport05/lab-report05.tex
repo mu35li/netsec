@@ -12,7 +12,7 @@
 
 \setcounter{section}{1}
 \author{Julian Deinert, Tronje Krabbe}
-\title{Labreport 04}
+\title{Labreport 05}
 \begin{document}
 \maketitle
 \tableofcontents
@@ -155,7 +155,7 @@ eine neue Regel, um ausgehende Packets zu verändern. \texttt{-o eth0} wählt da
 welches dafür sorgt, dass Traffic unverändert an das Interface fließt. Insgesamt sorgt die Regel also
 dafür, dass Traffic aus dem \texttt{192.168.254.0/24} Netz zum \texttt{eth0} Interface durchgelassen wird.
 
-\subsection{} % 3.2
+\subsection{NAT-Abläufe} % 3.2
 \begin{itemize}
     \item Wir können die ServerVM von der ClientVM aus \textit{ping}en.
     \item Von der ServerVM aus können wir nicht die ClientVM ansprechen, da die ServerVM im \texttt{172.16.137.0/24} Netz liegt.
@@ -164,12 +164,17 @@ dafür, dass Traffic aus dem \texttt{192.168.254.0/24} Netz zum \texttt{eth0} In
         Pakete korrekt aufgelistet (von Client zu Router, Router zu Server, und wieder zurück).
 \end{itemize}
 
-\subsection{} % 3.3
+\subsection{IP-Tables} % 3.3
 
-Wir filtern HTTP-Requests nach \texttt{10.1.1.2} und \texttt{172.16.137.144} raus, und lassen alle anderen durch:
+Wir filtern HTTP-Requests auf Port 80 und 443 nach \texttt{10.1.1.2} und \texttt{172.16.137.144} raus, und lassen alle anderen durch:
 \begin{verbatim}
 # iptables -A FORWARD -p tcp -d 10.1.1.2 --dport 80 -j DROP
-# iptables -A FORWARD -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+# iptables -A FORWARD -p tcp -d 10.1.1.2 --dport 443 -j DROP
+# iptables -A FORWARD -p tcp -d 172.16.137.144 --dport 80 -j DROP
+# iptables -A FORWARD -p tcp -d 172.16.137.144 --dport 443 -j DROP
+# iptabels -A FORWARD -p tcp -d 10.0.0.0/8 -j DROP
+# iptables -A FORWARD -p tcp --dport 80 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+# iptables -A FORWARD -j DROP
 \end{verbatim}
 
 
