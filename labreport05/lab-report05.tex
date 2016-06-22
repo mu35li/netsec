@@ -231,9 +231,13 @@ $ ssh -D licalhost:5555 user@172.16.137.144
 Konfiguration von Firefox im Appendix.
 
 \subsection{Netcat}
+Auf der ClientVM
 \begin{verbatim}
-# nc 192.168.254.44 5555
+$ nc -l 5555
+$ ssh -R 8000:localhost:5555 user@172.16.137.144
 \end{verbatim}
+Um netcat auf Port \texttt{5555} lauschen zu lassen und einen Tunnel von ServerVM Port \texttt{8000} auf ClientVM Port \texttt{5555} einzurichten.
+
 
 \newpage
 \section*{Appendix}
