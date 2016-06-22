@@ -184,6 +184,14 @@ Wir möchten eine Verbindung zur ServerVM unter \texttt{172.16.137.144} auf Port
 # iptables -I FORWARD 7 -d 172.16.137.144 --dport 22 -j ACCEPT
 \end{verbatim}
 
+\subsection{Weiterleitung 5022 auf 22} % 3.5
+
+Wir leiten den Port \texttt{5022} der RouterVM auf den Port \texttt{22} der ClientVM weiter.
+\begin{verbatim}
+# iptables -t nat -A -p tcp --dport 5022 -j DNAT --to-destination 192.168.254.44:22 
+\end{verbatim}
+
+
 
 \newpage
 \section*{Appendix}
