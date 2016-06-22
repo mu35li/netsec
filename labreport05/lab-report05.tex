@@ -6,7 +6,7 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{minted}
-\usepackage[left=2cm, right=2cm]{geometry}
+\usepackage[left=1cm, right=1cm, top=1cm, bottom=2cm]{geometry}
 \usepackage{url}
 \usepackage{graphicx}
 
@@ -14,6 +14,7 @@
 \setcounter{section}{1}
 \author{Julian Deinert, Tronje Krabbe}
 \title{Labreport 05}
+\linespread{0.5}
 \begin{document}
 \maketitle
 \tableofcontents
@@ -238,9 +239,98 @@ $ ssh -R 8000:localhost:5555 user@172.16.137.144
 \end{verbatim}
 Um netcat auf Port \texttt{5555} lauschen zu lassen und einen Tunnel von ServerVM Port \texttt{8000} auf ClientVM Port \texttt{5555} einzurichten.
 
+Dann, auf der ServerVM:
+\begin{verbatim}
+# nc localhost 8000
+\end{verbatim}
+Nun können wir beliebig Daten versenden.
+
+\setcounter{section}{5}
+\section*{5. OpenVPN}
+\addcontentsline{toc}{section}{5. OpenVPN}
+\setcounter{subsection}{0}
+\subsection{Filter-Regeln}
+\begin{verbatim}
+# iptables -A FORWARD -s 192.168.254.0/24 -d 172.16.137.0/24 -j ACCEPT
+# iptables -A FORWARD -j DROP
+\end{verbatim}
+
+\subsection{OpenVPN-Server einrichten}
+
+Auf der ServerVM
+\begin{verbatim}
+$ openvpn --genkey --secret static.key
+\end{verbatim}
+
+\subsection{Filterregeln auf der ServerVM}
+\begin{verbatim}
+# iptables -A INPUT -p udp --dport 1194 -j ACCEPT
+# iptables -A INPUT -j DROP
+# iptables -A OUTPUT -p udp --dport 1194 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+# iptables -A OUTPUT -j DROP
+\end{verbatim}
+
+\subsection{VPNClient}
+Clientconfig im Appendix
+
+\subsection{Starten des VPN-Tunnels}
+Auf der ServerVM
+\begin{verbatim}
+$ sudo openvpn server.conf
+\end{verbatim}
+Auf der ClientVM
+\begin{verbatim}
+$ sudo openvpn client.conf
+\end{verbatim}
+
+\subsection{Funktionskontrolle}
+Es wird das Interface \texttt{tun0} verwendet.
+\begin{verbatim}
+Wed Jun 22 19:50:12 2016 Peer Connection Initiated with [AF_INET]172.16.137.222:1194
+Wed Jun 22 19:50:12 2016 Initialization Sequence Completed
+\end{verbatim}
+Über 10.8.0.1 können wir auf den Server zugreifen.
+Wir könne von der ServerVM auf die ClientVM zugreifen, da der Tunnel bidirektional ist. Dies erreichen wir über die VPN-IP der ClientVM(10.8.0.2).
+\setcounter{section}{6}
+\section*{6. HTTP-Tunnel}
+\addcontentsline{toc}{section}{6. HTTP-Tunnel}
+\setcounter{subsection}{0}
+\subsection{Neue Filterregeln}
+Wir erlauben nur tcp Port \texttt{80} und udp Port \texttt{53}
+\begin{verbatim}
+# iptables -A FORWARD -s 192.168.254.44 -p tcp --dport 80 -j ACCEPT
+# iptables -A FORWARD -s 192.168.254.44 -p udp --dport 53 -j ACCEPT
+# iptables -A FORWARD -s 192.168.254.44 -j DROP
+\end{verbatim}
+
+\subsection{Umgehen der Filterrregeln}
+Wir ändern in \texttt{etc/ssh/sshd_config} den Port von \texttt{22} auf \texttt{80}.
+
+
 
 \newpage
 \section*{Appendix}
 \subsection*{4.3 Konfiguration von Firefox}
 \includegraphics[width=\textwidth]{images/image.png}
+
+\subsection*{5.2 OpenVPN Server Config}
+\begin{verbatim}
+port 1194
+dev tun
+ifconfig 10.8.0.1 10.8.0.2
+secret static.key
+keepalive 10 120
+;status openvpn-status.log
+verb 3
+\end{verbatim}
+\subsection*{5.2 OpenVPN Client Config}
+\begin{verbatim}
+dev tun
+remote 172.16.137.144 1194
+;resolve-retry infinite
+;nobind
+ifconfig 10.8.0.2 10.8.0.1
+secret static.key
+verb 3
+\end{verbatim}
 \end{document}
