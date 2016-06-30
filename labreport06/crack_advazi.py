@@ -9,8 +9,19 @@ if __name__ == "__main__":
         f.seek(-10, 2) # seek last 10 bytes
         key = [int(b) for b in f.read(10)]
         assert len(key) == 10
+        f.seek(0, 0) # seek beginning of file again
+        whole_file = f.read()
+
+        padding = 0
+        for i in range(len(whole_file) - 1, 0, -1):
+            if whole_file[i] not in key:
+                break
+            else:
+                padding += 1
+
         for i in range(len(key)):
-            key[i] ^= 0x0a
+            key[i] ^= padding
+
         f.seek(0, 0) # seek beginning of file again
         while True:
             counter += 1
@@ -20,4 +31,4 @@ if __name__ == "__main__":
                 break
             num = int.from_bytes(b, 'little')
             result += chr(num ^ key[counter])
-    print(result)
+    print(result[:len(result) - padding])

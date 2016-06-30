@@ -56,15 +56,11 @@ Hi Peter, hast du einen Geheimtipp fuer ein gutes Buch fuer mich? Gruss, Max
 \end{quote}
 
 \subsection{AdvaziCrypt - Denksport}
-Da \textit{PKCS7}-Padding blockweise passiert, und der Key 10 Bytes lang ist, können
-wir davon ausgehen, dass die letzten 10 Bytes des Ciphertexts sich so ergeben:
-\begin{align*}
-    \text{key} \oplus 0x10 = \text{ciphertext}
-\end{align*}
-Um nun also den Key zu ermitteln, rechnen wir einfach:
-\begin{align*}
-    \text{ciphertext} \oplus 0x10 = \text{key}
-\end{align*}
+Wenn wir davon ausgehen, dass der Key vollständig (wenn auch `verschlüsselt') in der Datei vorhanden istm
+dann sind auf jeden Fall die letzten 10 Bytes des Ciphertexts die verschlüsselten Key-Bytes. Jetzt kann man
+auf die Anzahl der Padding-Bytes schließen, indem man darauf achtet, wann die hinteren Bytes aufhören, Teil
+des vermeintlichen, verschlüsselten Keys zu sein.
+Dies kann allerdings auch Glückssache sein...
 
 \newpage
 \section*{Appendix}
