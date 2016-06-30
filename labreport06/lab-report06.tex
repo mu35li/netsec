@@ -1,0 +1,74 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[german]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{minted}
+\usepackage[left=1.2cm, right=1.2cm, top=1.5cm, bottom=2cm]{geometry}
+\usepackage{url}
+\usepackage{graphicx}
+
+
+\setcounter{section}{1}
+\author{Julian Deinert, Tronje Krabbe}
+\title{Labreport 06}
+\linespread{1.0}
+\begin{document}
+\maketitle
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+\setcounter{page}{1}
+
+
+\section*{1. TODO}
+\addcontentsline{toc}{section}{1. TODO}
+\setcounter{subsection}{1}
+
+\subsection{}
+TODO
+
+\setcounter{section}{2}
+\section*{2. TODO}
+\addcontentsline{toc}{section}{2. TODO}
+\setcounter{subsection}{0}
+\subsection{}
+TODO
+
+\setcounter{section}{3}
+\section*{3. Unsichere selbstenwtickelte Verschlüsselungsalgorithmen}
+\addcontentsline{toc}{section}{3. Unsichere selbstenwtickelte Verschlüsselungsalgorithmen}
+\setcounter{subsection}{0}
+\subsection{BaziCrypt}
+Die letzten 10 Bytes des Ciphertexts sind exakt der Key. Oder, genauergesagt, der Key XOR Null,
+was den Key unverändert lässt. Jetzt ist es sehr einfach, die Dateien zu entschlüsseln. Siehe
+unser Skript im Appendix. Die drei Plaintexte sind:
+\begin{quote}[n01.txt.enc]
+Hallo Peter. Endlich koennen wir geheim kommunizieren! Bis bald, Max
+\end{quote}
+\begin{quote}[n02.txt.enc]
+Hi Max! Super, Sicherheitsbewusstsein ist ja extrem wichtig! Schoene Gruesse, Peter.
+\end{quote}
+\begin{quote}[n03.txt.enc]
+Hi Peter, hast du einen Geheimtipp fuer ein gutes Buch fuer mich? Gruss, Max
+\end{quote}
+
+\subsection{AdvaziCrypt - Denksport}
+Da \textit{PKCS7}-Padding blockweise passiert, und der Key 10 Bytes lang ist, können
+wir davon ausgehen, dass die letzten 10 Bytes des Ciphertexts sich so ergeben:
+\begin{align*}
+    \text{key} \oplus 0x10 = \text{ciphertext}
+\end{align*}
+Um nun also den Key zu ermitteln, rechnen wir einfach:
+\begin{align*}
+    \text{ciphertext} \oplus 0x10 = \text{key}
+\end{align*}
+
+\newpage
+\section*{Appendix}
+\subsection{3. Skripte}
+\inputminted{python}{crack_bazi.py}
+
+\end{document}
