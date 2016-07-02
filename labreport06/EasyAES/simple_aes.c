@@ -1,4 +1,5 @@
 #include "simple_aes.h"
+#include "util.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -241,6 +242,9 @@ void aes128_encrypt(uint8_t * state, uint8_t * key) {
     uint8_t * key_schedule = (uint8_t *) calloc(176, sizeof(uint8_t));
     uint8_t * round_key = (uint8_t *) calloc(16, sizeof(uint8_t));
 
+    CHECK_ALLOC(key_schedule);
+    CHECK_ALLOC(round_key);
+
     for (uint8_t i = 0; i < 16; i++) {
         /* initialize key schedule; its first 16 bytes are the key */
         key_schedule[i] = key[i];
@@ -287,6 +291,9 @@ void aes128_encrypt(uint8_t * state, uint8_t * key) {
 void aes128_decrypt(uint8_t * state, uint8_t * key) {
     uint8_t * key_schedule = (uint8_t *) calloc(176, sizeof(uint8_t));
     uint8_t * round_key = (uint8_t *) calloc(16, sizeof(uint8_t));
+
+    CHECK_ALLOC(key_schedule);
+    CHECK_ALLOC(round_key);
 
     for (uint8_t i = 0; i < 16; i++) {
         /* initialize key schedule; its first 16 bytes are the key */

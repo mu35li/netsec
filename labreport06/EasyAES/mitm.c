@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "mitm.h"
 #include "simple_aes.h"
+#include "util.h"
 
 /* 15732737 possible keys? */
 
@@ -19,8 +20,15 @@ struct KeyRes {
 /* free a Key-Result mapping and its components */
 void KeyRes_free(KeyRes * kr) {
     assert(kr != NULL);
-    free(kr->key);
-    free(kr->res);
+
+    if (kr->key != NULL) {
+        free(kr->key);
+    }
+
+    if (kr->res != NULL) {
+        free(kr->res);
+    }
+
     free(kr);
 }
 
@@ -29,6 +37,10 @@ KeyRes * KeyRes_new(void) {
     KeyRes * kr = (KeyRes *) calloc(1, sizeof(KeyRes));
     kr->key = (uint8_t *) calloc(16, sizeof(uint8_t));
     kr->res = (uint8_t *) calloc(16, sizeof(uint8_t));
+
+    CHECK_ALLOC(kr);
+    CHECK_ALLOC(kr->key);
+    CHECK_ALLOC(kr->res);
 
     return kr;
 }
