@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "mitm.h"
-#include "simple_aes.h"
+#include "simple_aes/simple_aes.h"
 #include "util.h"
 
 /* 15732737 possible keys? */

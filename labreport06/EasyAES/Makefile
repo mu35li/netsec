@@ -16,7 +16,7 @@ CFLAGS = -g -Wall -Wextra -Werror -Wshadow -Wpedantic
 
 ### objects ###
 # the object files we're building
-OBJ = simple_aes.o mitm.o
+OBJ = simple_aes/simple_aes.o mitm.o
 
 ### executable ###
 # the name of our executable
@@ -53,3 +53,4 @@ mitm.x: $(OBJ)
 # remove object and executable files
 clean:
 	rm -f *.o *.x
+	rm -f simple_aes/simple_aes.o

@@ -1,0 +1,3 @@
+[submodule "labreport06/EasyAES/simple_aes"]
+	path = labreport06/EasyAES/simple_aes
+	url = git@github.com:tronje/simple_aes.git
