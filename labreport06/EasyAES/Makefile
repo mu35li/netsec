@@ -12,7 +12,7 @@ CC = gcc
 # -Wextra: no, really, ALL warnings
 # -Wshadow: check for shadowed variables
 # -Wpedantic: check for strict compliance with ISO C
-CFLAGS = -g -Wall -Wextra -Werror -Wshadow -Wpedantic
+CFLAGS = -g -Wall -Wextra -Werror -Wshadow -Wpedantic -DDEBUG
 
 ### objects ###
 # the object files we're building

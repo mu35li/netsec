@@ -10,3 +10,9 @@ do { \
             exit(EXIT_FAILURE); \
     } \
 } while (0)
+
+#ifdef DEBUG
+#   define DBPRINT(s) do {fprintf(stderr, s);} while(0)
+#else
+#   define DBPRINT(s)
+#endif

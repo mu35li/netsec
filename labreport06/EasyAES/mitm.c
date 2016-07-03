@@ -20,7 +20,7 @@ struct KeyRes {
 
 /* storage for multiple KeyRes structs */
 struct KeyResStore {
-    KeyRes * items;
+    KeyRes ** items;
     uint64_t size;
     uint64_t capacity;
 };
@@ -29,42 +29,37 @@ struct KeyResStore {
 void KeyRes_free(KeyRes * kr) {
     assert(kr != NULL);
 
-    if (kr->key != NULL) {
-        free(kr->key);
-    }
-
-    if (kr->res != NULL) {
-        free(kr->res);
-    }
-
+    free(kr->key);
+    free(kr->res);
     free(kr);
+    DBPRINT("free KeyRes\n");
 }
 
 /* create and allocate memory for a new Key-Result mapping */
 KeyRes * KeyRes_new(void) {
     KeyRes * kr = (KeyRes *) calloc(1, sizeof(KeyRes));
-
     CHECK_ALLOC(kr);
 
     kr->key = (uint8_t *) calloc(16, sizeof(uint8_t));
-    kr->res = (uint8_t *) calloc(16, sizeof(uint8_t));
-
     CHECK_ALLOC(kr->key);
+
+    kr->res = (uint8_t *) calloc(16, sizeof(uint8_t));
     CHECK_ALLOC(kr->res);
 
+    DBPRINT("create new KeyRes\n");
     return kr;
 }
 
 void KeyResStore_free(KeyResStore * krs) {
     assert(krs != NULL);
 
-    if (krs->items != NULL) {
-        for (uint64_t i = 0; i < krs->size; i++) {
-            KeyRes_free(&krs->items[0]);
-        }
+    for (uint64_t i = 0; i < krs->size; i++) {
+        KeyRes_free(krs->items[i]);
     }
 
+    free(krs->items);
     free(krs);
+    DBPRINT("free KeyResStore\n");
 }
 
 KeyResStore * KeyResStore_new(void) {
@@ -72,18 +67,27 @@ KeyResStore * KeyResStore_new(void) {
 
     CHECK_ALLOC(krs);
 
-    krs->items = (KeyRes *) calloc(100, sizeof(KeyRes));
+    krs->items = (KeyRes **) calloc(100, sizeof(KeyRes **));
+
+    CHECK_ALLOC(krs->items);
+
     krs->size = 0;
     krs->capacity = 100;
 
+    DBPRINT("create new KeyResStore\n");
     return krs;
 }
 
 void KeyResStore_resize(KeyResStore * krs, uint64_t n) {
     assert(krs != NULL);
 
-    krs->items = (KeyRes *) realloc(krs->items, krs->capacity + n);
-    CHECK_ALLOC(krs->items);
+    KeyRes ** temp = (KeyRes **) realloc(krs->items, (krs->capacity + n) * sizeof(KeyRes **));
+
+    CHECK_ALLOC(temp);
+
+    krs->items = temp;
+    krs->capacity += n;
+    DBPRINT("resize KeyResStore\n");
 }
 
 void KeyResStore_add(KeyResStore * krs, KeyRes * kr) {
@@ -94,8 +98,9 @@ void KeyResStore_add(KeyResStore * krs, KeyRes * kr) {
         KeyResStore_resize(krs, krs->capacity + 100);
     }
 
-    krs->items[krs->size] = *kr;
-    krs->size += 1;
+    krs->items[krs->size] = kr;
+    krs->size++;
+    DBPRINT("add KeyRes to KeyResStore\n");
 }
 
 int main(void) {
@@ -122,8 +127,12 @@ int main(void) {
      */
     KeyResStore * kr_store = KeyResStore_new();
     KeyRes * lol = KeyRes_new();
+    KeyRes * rofl = KeyRes_new();
+    lol->key[0] = 222;
     KeyResStore_add(kr_store, lol);
+    KeyResStore_add(kr_store, rofl);
 
+    printf("%d\n", kr_store->items[0]->key[0]);
     KeyResStore_free(kr_store);
     return EXIT_SUCCESS;
 }
