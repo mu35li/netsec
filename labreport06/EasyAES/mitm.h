@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define KEYLEN 16
 #define BYTE_MAX 255
@@ -28,3 +29,13 @@ void KeyResStore_resize(KeyResStore * krs, uint64_t n);
 
 /* add a key-result mapping to a key-result-store, resizing the latter if necessary */
 void KeyResStore_add(KeyResStore * krs, KeyRes * kr);
+
+/* populate a key-result-store with all possible keys and results */
+void KeyResStore_populate(KeyResStore * krs);
+
+/* check if two 16-byte 'texts' are equal */
+bool txt_eq(uint8_t * t1, uint8_t * t2);
+
+/* the actual attack, comparing all stored encryption results
+ * with all possible decryption results */
+void meet_in_the_middle(KeyResStore * krs);

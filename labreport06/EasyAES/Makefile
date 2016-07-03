@@ -35,7 +35,7 @@ default: mitm.x
 # -O3: optimize for speed
 # -march=native: allow CPU-specific optimizations
 # -flto: do link-time-optimization
-opti: CFLAGS = -O3 -march=native -flto
+opti: CFLAGS = -O3 -march=native -flto -fopenmp
 opti: mitm.x
 
 ### executable target ###

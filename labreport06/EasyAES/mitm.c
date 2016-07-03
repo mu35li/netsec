@@ -4,13 +4,21 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
+#include <omp.h>
 #include "mitm.h"
 #include "simple_aes/simple_aes.h"
 #include "util.h"
 
 /* 15732737 possible keys? */
 
-bool keys_eq(uint8_t * k1, uint8_t * k2);
+const uint8_t plaintext[16] = {'V','e','r','s','c','h','l','u','e','s','s','e','l','u','n','g'};
+const uint8_t ciphertext[16] = {
+    0xbe, 0x39, 0x3d, 0x39,
+    0xca, 0x4e, 0x18, 0xf4,
+    0x1f, 0xa9, 0xd8, 0x8a,
+    0x9d, 0x47, 0xa5, 0x74
+};
+
 
 /* map a key to its encryption or decryption result */
 struct KeyRes {
@@ -24,6 +32,44 @@ struct KeyResStore {
     uint64_t size;
     uint64_t capacity;
 };
+
+int main(void) {
+    /* pseudo-code:
+     * for key1 in keys:
+     *     result1 = encrypt(plaintext, key1)
+     *     kr = KeyRes_new()
+     *     kr->key = key1
+     *     kr->res = result1
+     *     store(kr)
+     * for key2 in keys:
+     *     result2 = decrypt(ciphertext, key2)
+     *     if result2 == retrieve(result1):
+     *         print(key1)
+     *         print(key2)
+     *         return EXIT_SUCCESS;
+     *  return EXIT_FAILURE;
+     */
+
+    /* init our key-result-store */
+    KeyResStore * store = KeyResStore_new();
+
+    /* populate it with mappings of all legal keys to their encryption results */
+    KeyResStore_populate(store);
+    fprintf(stderr, "populated key-result-store\n");
+
+    /* do our attack by comparing all stored encryption results
+     * with all decryption results until we have a match.
+     * Result will be printed to stdout */
+    fprintf(stderr, "starting meet-in-the-middle attack...\n");
+    meet_in_the_middle(store);
+    fprintf(stderr, "done!\n");
+
+    /* free our key-result-store; this also frees all key-result-maps stored */
+    KeyResStore_free(store);
+
+    /* we were successful! */
+    return EXIT_SUCCESS;
+}
 
 /* free a Key-Result mapping and its components */
 void KeyRes_free(KeyRes * kr) {
@@ -103,36 +149,301 @@ void KeyResStore_add(KeyResStore * krs, KeyRes * kr) {
     DBPRINT("add KeyRes to KeyResStore\n");
 }
 
-int main(void) {
-    /*
-     * pseudo-code:
-     * for key1 in keys:
-     *     result1 = encrypt(plaintext, key1)
-     *     kr = KeyRes_new()
-     *     kr->key = key1
-     *     kr->res = result1
-     *     store(kr)
-     * for key2 in keys:
-     *     result2 = decrypt(ciphertext, key2)
-     *     if result2 == retrieve(result1):
-     *         print(key1)
-     *         print(key2)
-     *         return EXIT_SUCCESS;
-     *  return EXIT_FAILURE;
-     *
-     */
+void KeyResStore_populate(KeyResStore * krs) {
+    uint8_t byte1_pos = 0;
+    uint8_t byte1_val = 0x01;
 
-    /* initialize a kr-store, a kr map and add the latter to the former,
-     * just to see if it works...
-     */
-    KeyResStore * kr_store = KeyResStore_new();
-    KeyRes * lol = KeyRes_new();
-    KeyRes * rofl = KeyRes_new();
-    lol->key[0] = 222;
-    KeyResStore_add(kr_store, lol);
-    KeyResStore_add(kr_store, rofl);
+    /* add key with only null-bytes */
+    uint8_t * nullpt = (uint8_t *) calloc(16, sizeof(uint8_t));
+    CHECK_ALLOC(nullpt);
 
-    printf("%d\n", kr_store->items[0]->key[0]);
-    KeyResStore_free(kr_store);
-    return EXIT_SUCCESS;
+    KeyRes * nullkr = KeyRes_new();
+    for (uint8_t i = 0; i < 16; i++) {
+        nullpt[i] = plaintext[i];
+    }
+
+    aes128_encrypt(nullpt, nullkr->key);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        nullkr->res[i] = nullpt[i];
+    }
+
+    KeyResStore_add(krs, nullkr);
+
+    free(nullpt);
+
+    /* populate with 1-non-null-byte keys */
+    do {
+        KeyRes * kr = KeyRes_new();
+        kr->key[byte1_pos] = byte1_val;
+
+        uint8_t * pt = (uint8_t *) calloc(16, sizeof(uint8_t));
+        CHECK_ALLOC(pt);
+
+        for (uint8_t i = 0; i < 16; i++) {
+            pt[i] = plaintext[i];
+        }
+
+        aes128_encrypt(pt, kr->key);
+
+        for (uint8_t i = 0; i < 16; i++) {
+            kr->res[i] = pt[i];
+        }
+
+        free(pt);
+        KeyResStore_add(krs, kr);
+
+        if (byte1_val == 0xff) {
+            byte1_pos++;
+            byte1_val = 0x01;
+        }
+        else {
+            byte1_val++;
+        }
+    } while (!(byte1_pos == 15 && byte1_val == 0xff));
+
+    byte1_pos = 0;
+    byte1_val = 0x01;
+    uint8_t byte2_pos = 1;
+    uint8_t byte2_val = 0x01;
+
+    /* populate with 2-non-null-byte keys */
+    do {
+        KeyRes * kr = KeyRes_new();
+        kr->key[byte1_pos] = byte1_val;
+        kr->key[byte2_pos] = byte2_val;
+
+        uint8_t * pt = (uint8_t *) calloc(16, sizeof(uint8_t));
+        CHECK_ALLOC(pt);
+
+        for (uint8_t i = 0; i < 16; i++) {
+            pt[i] = plaintext[i];
+        }
+
+        aes128_encrypt(pt, kr->key);
+
+        for (uint8_t i = 0; i < 16; i++) {
+            kr->res[i] = pt[i];
+        }
+
+        free(pt);
+        KeyResStore_add(krs, kr);
+
+        if (byte1_pos == 14 && byte2_pos == 15\
+            && byte1_val == 0xff && byte2_val == 0xff) {
+            break;
+        }
+
+        if (byte1_val == 0xff && byte2_val == 0xff) {
+            byte1_val = 0x01;
+            byte2_val = 0x01;
+            byte1_pos++;
+
+            if (byte1_pos == byte2_pos) {
+                byte2_pos++;
+            }
+
+            continue;
+        }
+
+        if (byte1_val == 0xff) {
+            byte1_val = 0x01;
+            byte2_val++;
+        }
+        else {
+            byte1_val++;
+        }
+    } while (!(byte1_pos == 14 && byte2_pos == 15 \
+                && byte1_val == 0xff && byte2_val == 0xff));
+}
+
+void meet_in_the_middle(KeyResStore * krs) {
+    uint8_t byte1_pos = 0;
+    uint8_t byte1_val = 0x01;
+    //uint64_t counter = 0;
+    bool done = false;
+
+    /* try key with only null-bytes */
+    uint8_t * nullkey = (uint8_t *) calloc(16, sizeof(uint8_t));
+    CHECK_ALLOC(nullkey);
+    uint8_t * nullct = (uint8_t *) calloc(16, sizeof(uint8_t));
+    CHECK_ALLOC(nullct);
+
+    for (uint8_t i = 0; i < 16; i++) {
+        nullct[i] = ciphertext[i];
+    }
+
+    aes128_decrypt(nullct, nullkey);
+
+    for (uint8_t i = 0; i < krs->size; i++) {
+        if (txt_eq(krs->items[i]->res, nullct)) {
+            printf("MATCH FOUND!\n");
+            printf("Key 1: ");
+            for (uint8_t j = 0; j < 15; j++) {
+                printf("%02x, ", krs->items[i]->key[j]);
+            }
+            printf("%02x\n", krs->items[i]->key[15]);
+
+            printf("Key 2: ");
+            for (uint8_t j = 0; j < 15; j++) {
+                printf("%02x, ", nullkey[j]);
+            }
+            printf("%02x\n", nullkey[15]);
+            free(nullct);
+            free(nullkey);
+            return;
+        }
+    }
+
+    free(nullct);
+    free(nullkey);
+
+    /* decrypt with 1-non-null-byte keys */
+    do {
+        uint8_t * key = (uint8_t *) calloc(16, sizeof(uint8_t));
+        CHECK_ALLOC(key);
+
+        key[byte1_pos] = byte1_val;
+
+        uint8_t * ct = (uint8_t *) calloc(16, sizeof(uint8_t));
+        CHECK_ALLOC(ct);
+
+        for (uint8_t i = 0; i < 16; i++) {
+            ct[i] = ciphertext[i];
+        }
+
+        aes128_decrypt(ct, key);
+
+        #pragma omp parallel for shared(done)
+        for (uint64_t i = 0; i < krs->size; i++) {
+            /*counter++;
+            if (counter % 100000 == 0) {
+                fprintf(stderr, "%lu iterations completed.\n", counter);
+            }*/
+
+            if (done) continue;
+
+            if (txt_eq(krs->items[i]->res, ct)) {
+                printf("MATCH FOUND!\n");
+                printf("Key 1: ");
+                for (uint8_t j = 0; j < 15; j++) {
+                    printf("%02x, ", krs->items[i]->key[j]);
+                }
+                printf("%02x\n", krs->items[i]->key[15]);
+
+                printf("Key 2: ");
+                for (uint8_t j = 0; j < 15; j++) {
+                    printf("%02x, ", key[j]);
+                }
+                printf("%02x\n", key[15]);
+
+                done = true;
+            }
+        }
+
+        free(key);
+        free(ct);
+        if (done) return;
+
+        if (byte1_val == 0xff) {
+            byte1_pos++;
+            byte1_val = 0x01;
+        }
+        else {
+            byte1_val++;
+        }
+    } while (!(byte1_pos == 15 && byte1_val == 0xff));
+
+    fprintf(stderr, "1-non-null-byte keys done, no match yet.\n");
+
+    byte1_pos = 0;
+    byte1_val = 0x01;
+    uint8_t byte2_pos = 1;
+    uint8_t byte2_val = 0x01;
+
+    /* populate with 2-non-null-byte keys */
+    do {
+        uint8_t * key = (uint8_t *) calloc(16, sizeof(uint8_t));
+        CHECK_ALLOC(key);
+
+        key[byte1_pos] = byte1_val;
+        key[byte2_pos] = byte2_val;
+
+        uint8_t * ct = (uint8_t *) calloc(16, sizeof(uint8_t));
+        CHECK_ALLOC(ct);
+
+        for (uint8_t i = 0; i < 16; i++) {
+            ct[i] = ciphertext[i];
+        }
+
+        aes128_decrypt(ct, key);
+
+        #pragma omp parallel for shared(done)
+        for (uint64_t i = 0; i < krs->size; i++) {
+            /*counter++;
+            if (counter % 100000 == 0) {
+                fprintf(stderr, "%lu iterations completed.\n", counter);
+            }*/
+
+            if (done) continue;
+
+            if (txt_eq(krs->items[i]->res, ct)) {
+                printf("MATCH FOUND!\n");
+                printf("Key 1: ");
+                for (uint8_t j = 0; j < 15; j++) {
+                    printf("%02x, ", krs->items[i]->key[j]);
+                }
+                printf("%02x\n", krs->items[i]->key[15]);
+
+                printf("Key 2: ");
+                for (uint8_t j = 0; j < 15; j++) {
+                    printf("%02x, ", key[j]);
+                }
+                printf("%02x\n", key[15]);
+
+                done = true;
+            }
+        }
+
+        free(key);
+        free(ct);
+        if (done) return;
+
+        if (byte1_pos == 14 && byte2_pos == 15\
+            && byte1_val == 0xff && byte2_val == 0xff) {
+            break;
+        }
+
+        if (byte1_val == 0xff && byte2_val == 0xff) {
+            byte1_val = 0x01;
+            byte2_val = 0x01;
+            byte1_pos++;
+
+            if (byte1_pos == byte2_pos) {
+                byte2_pos++;
+            }
+
+            continue;
+        }
+
+        if (byte1_val == 0xff) {
+            byte1_val = 0x01;
+            byte2_val++;
+        }
+        else {
+            byte1_val++;
+        }
+    } while (!(byte1_pos == 14 && byte2_pos == 15 \
+                && byte1_val == 0xff && byte2_val == 0xff));
+
+    printf("No match found!\n");
+}
+
+bool txt_eq(uint8_t * t1, uint8_t * t2) {
+    for (uint8_t i = 0; i < 16; i++) {
+        if (t1[i] != t2[i]) {
+            return false;
+        }
+    }
+    return true;
 }
