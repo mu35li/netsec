@@ -479,7 +479,9 @@ void meet_in_the_middle(KeyResStore ** krs) {
         }
     }
 
-    printf("No match found!\n");
+    if (!done) {
+        printf("No match found!\n");
+    }
 }
 
 bool txt_eq(uint8_t * t1, uint8_t * t2) {
