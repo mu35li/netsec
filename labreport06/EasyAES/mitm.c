@@ -9,7 +9,7 @@
 #include "simple_aes/simple_aes.h"
 #include "util.h"
 
-/* 15732737 possible keys? */
+/* 7807081 possible keys */
 
 const uint8_t plaintext[16] = {'V','e','r','s','c','h','l','u','e','s','s','e','l','u','n','g'};
 const uint8_t ciphertext[16] = {
@@ -64,7 +64,12 @@ int main(void) {
      */
 
     /* init our key-result-store */
-    KeyResStore * store = KeyResStore_new();
+    KeyResStore ** store = (KeyResStore **) calloc(256, sizeof(KeyResStore));
+    CHECK_ALLOC(store);
+
+    for (uint32_t i = 0; i < 256; i++) {
+        store[i] = KeyResStore_new();
+    }
 
     /* populate it with mappings of all legal keys to their encryption results */
     KeyResStore_populate(store);
@@ -78,7 +83,9 @@ int main(void) {
     fprintf(stderr, "done!\n");
 
     /* free our key-result-store; this also frees all key-result-maps stored */
-    KeyResStore_free(store);
+    for (uint32_t i = 0; i < 256; i++) {
+        KeyResStore_free(store[i]);
+    }
 
     /* we were successful! */
     return EXIT_SUCCESS;
@@ -152,9 +159,9 @@ void KeyResStore_resize(KeyResStore * krs, uint64_t n) {
 void KeyResStore_add(KeyResStore * krs, KeyRes * kr) {
     assert(krs != NULL);
 
-    /* if key-result-store is full, give it capacity for a 100 more */
+    /* if key-result-store is full, give it capacity for 1000 more */
     if (krs->size == krs->capacity) {
-        KeyResStore_resize(krs, krs->capacity + 100);
+        KeyResStore_resize(krs, 1000);
     }
 
     krs->items[krs->size] = kr;
@@ -162,7 +169,7 @@ void KeyResStore_add(KeyResStore * krs, KeyRes * kr) {
     DBPRINT("add KeyRes to KeyResStore\n");
 }
 
-void KeyResStore_populate(KeyResStore * krs) {
+void KeyResStore_populate(KeyResStore ** krs) {
     uint8_t byte1_pos = 0;
     uint8_t byte1_val = 0x01;
     uint64_t count = 1;
@@ -182,12 +189,12 @@ void KeyResStore_populate(KeyResStore * krs) {
         nullkr->res[i] = nullpt[i];
     }
 
-    KeyResStore_add(krs, nullkr);
+    KeyResStore_add(krs[nullpt[0]], nullkr);
 
     free(nullpt);
 
     /* populate with 1-non-null-byte keys */
-    do {
+    while (true) {
         KeyRes * kr = KeyRes_new();
         kr->key[byte1_pos] = byte1_val;
 
@@ -204,9 +211,9 @@ void KeyResStore_populate(KeyResStore * krs) {
             kr->res[i] = pt[i];
         }
 
-        free(pt);
-        KeyResStore_add(krs, kr);
+        KeyResStore_add(krs[pt[0]], kr);
         count++;
+        free(pt);
 
         if (byte1_pos == 15 && byte1_val == 0xff) {
             break;
@@ -219,7 +226,7 @@ void KeyResStore_populate(KeyResStore * krs) {
         else {
             byte1_val++;
         }
-    } while (!(byte1_pos == 15 && byte1_val == 0xff));
+    }
 
     byte1_pos = 0;
     byte1_val = 0x01;
@@ -245,9 +252,9 @@ void KeyResStore_populate(KeyResStore * krs) {
             kr->res[i] = pt[i];
         }
 
-        free(pt);
-        KeyResStore_add(krs, kr);
+        KeyResStore_add(krs[pt[0]], kr);
         count++;
+        free(pt);
 
         if (byte1_pos == 14 && byte2_pos == 15 \
             && byte1_val == 0xff && byte2_val == 0xff) {
@@ -276,11 +283,10 @@ void KeyResStore_populate(KeyResStore * krs) {
         }
     }
 
-    fprintf(stderr, "Number of keys: %lu\n", krs->size);
-    fprintf(stderr, "count of keys: %lu\n", count);
+    fprintf(stderr, "nr of keys: %lu\n", count);
 }
 
-void meet_in_the_middle(KeyResStore * krs) {
+void meet_in_the_middle(KeyResStore ** krs) {
     uint8_t byte1_pos = 0;
     uint8_t byte1_val = 0x01;
     //uint64_t counter = 0;
@@ -298,14 +304,14 @@ void meet_in_the_middle(KeyResStore * krs) {
 
     aes128_decrypt(nullct, nullkey);
 
-    for (uint64_t i = 0; i < krs->size; i++) {
-        if (txt_eq(krs->items[i]->res, nullct)) {
+    for (uint64_t i = 0; i < krs[nullct[0]]->size; i++) {
+        if (txt_eq(krs[nullct[0]]->items[i]->res, nullct)) {
             printf("MATCH FOUND!\n");
             printf("Key 1: ");
             for (uint8_t j = 0; j < 15; j++) {
-                printf("0x%02x, ", krs->items[i]->key[j]);
+                printf("0x%02x, ", krs[nullct[0]]->items[i]->key[j]);
             }
-            printf("0x%02x\n", krs->items[i]->key[15]);
+            printf("0x%02x\n", krs[nullct[0]]->items[i]->key[15]);
 
             printf("Key 2: ");
             for (uint8_t j = 0; j < 15; j++) {
@@ -338,7 +344,7 @@ void meet_in_the_middle(KeyResStore * krs) {
         aes128_decrypt(ct, key);
 
         #pragma omp parallel for shared(done)
-        for (uint64_t i = 0; i < krs->size; i++) {
+        for (uint64_t i = 0; i < krs[ct[0]]->size; i++) {
             /*counter++;
             if (counter % 100000 == 0) {
                 fprintf(stderr, "%lu iterations completed.\n", counter);
@@ -346,13 +352,13 @@ void meet_in_the_middle(KeyResStore * krs) {
 
             if (done) continue;
 
-            if (txt_eq(krs->items[i]->res, ct)) {
+            if (txt_eq(krs[ct[0]]->items[i]->res, ct)) {
                 printf("MATCH FOUND!\n");
                 printf("Key 1: ");
                 for (uint8_t j = 0; j < 15; j++) {
-                    printf("0x%02x, ", krs->items[i]->key[j]);
+                    printf("0x%02x, ", krs[ct[0]]->items[i]->key[j]);
                 }
-                printf("0x%02x\n", krs->items[i]->key[15]);
+                printf("0x%02x\n", krs[ct[0]]->items[i]->key[15]);
 
                 printf("Key 2: ");
                 for (uint8_t j = 0; j < 15; j++) {
@@ -411,7 +417,7 @@ void meet_in_the_middle(KeyResStore * krs) {
         aes128_decrypt(ct, key);
 
         #pragma omp parallel for shared(done)
-        for (uint64_t i = 0; i < krs->size; i++) {
+        for (uint64_t i = 0; i < krs[ct[0]]->size; i++) {
             /*counter++;
             if (counter % 100000 == 0) {
                 fprintf(stderr, "%lu iterations completed.\n", counter);
@@ -419,13 +425,13 @@ void meet_in_the_middle(KeyResStore * krs) {
 
             if (done) continue;
 
-            if (txt_eq(krs->items[i]->res, ct)) {
+            if (txt_eq(krs[ct[0]]->items[i]->res, ct)) {
                 printf("MATCH FOUND!\n");
                 printf("Key 1: ");
                 for (uint8_t j = 0; j < 15; j++) {
-                    printf("0x%02x, ", krs->items[i]->key[j]);
+                    printf("0x%02x, ", krs[ct[0]]->items[i]->key[j]);
                 }
-                printf("0x%02x\n", krs->items[i]->key[15]);
+                printf("0x%02x\n", krs[ct[0]]->items[i]->key[15]);
 
                 printf("Key 2: ");
                 for (uint8_t j = 0; j < 15; j++) {
