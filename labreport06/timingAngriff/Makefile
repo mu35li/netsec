@@ -7,7 +7,7 @@ CC = gcc
 
 ### compilation flags ###
 #CFLAGS = -g -Wall -Wextra -Werror -Wshadow -Wpedantic
-CFLAGS = -O0
+CFLAGS = -O0 -Wall -Wextra -Wshadow -Wpedantic
 
 ### objects ###
 OBJ = password_compare.o timing.o

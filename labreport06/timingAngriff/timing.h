@@ -4,5 +4,7 @@
 #include <time.h>
 #include <stdint.h>
 
+typedef struct Index2d Index2d;
+
 extern bool password_compare(const char * password);
-uint32_t time_max(const clock_t * arr, uint32_t len);
+void time_max(clock_t ** arr, size_t len, Index2d * res);
