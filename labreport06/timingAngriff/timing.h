@@ -4,5 +4,5 @@
 #include <time.h>
 #include <stdint.h>
 
-extern bool password_compare(const char * password);
+extern int password_compare(const char * password);
 size_t time_max(clock_t * arr, size_t len);

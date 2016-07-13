@@ -3,18 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <omp.h>
 #include "timing.h"
 
 #define MAXLEN 20
-#define LENGTH 5
+#define LENGTH 20
 
 const char * symbols = "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                       "äöü"
                        "0123456789"
-                       "!@#$%^&*()-_=+[]{}|/?.,<>;:'\"\\`~"
-                       "€´ ";
+                       "!@#$%^&*()-_=+[]{}|/?.,<>;:'\"\\`~ ";
 
 int main(void) {
     const size_t len = strlen(symbols);
@@ -25,7 +22,9 @@ int main(void) {
 
     int res = 0;
 
-    for (uint32_t i = 0; i < LENGTH; i++) {
+    secret[0] = 'L';
+
+    for (uint32_t i = 1; i < LENGTH; i++) {
         for (uint64_t j = 0; j < len; j++) {
             secret[i] = symbols[j];
 
