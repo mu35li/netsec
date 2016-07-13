@@ -23,8 +23,13 @@ int main(void) {
     int res = 0;
 
     secret[0] = 'L';
+    secret[1] = 'i';
+    secret[2] = 'c';
+    secret[3] = 'h';
+    secret[4] = 't';
 
-    for (uint32_t i = 1; i < LENGTH; i++) {
+    for (uint32_t i = 5; i < LENGTH; i++) {
+        printf("i: %u\n", i);
         for (uint64_t j = 0; j < len; j++) {
             secret[i] = symbols[j];
 
@@ -40,6 +45,7 @@ int main(void) {
         }
         
         secret[i] = symbols[time_max(times, len)];
+        printf("pw so far: %s\n", secret);
     }
 
     printf("timing attack says: %s\n", secret);
