@@ -6,7 +6,7 @@
 #include "timing.h"
 
 #define MAXLEN 20
-#define LENGTH 20
+#define LENGTH 15
 
 const char * symbols = "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
