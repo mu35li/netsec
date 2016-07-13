@@ -36,7 +36,7 @@ int main(void) {
                 str[j] = symbols[k];
             }
             start = clock();
-            for (uint64_t j = 0; j < 10000000; j++) {
+            for (uint64_t j = 0; j < 100000000; j++) {
                 password_compare(str);
             }
             stop = clock();
