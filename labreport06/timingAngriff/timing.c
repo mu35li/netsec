@@ -34,8 +34,8 @@ int main(void) {
             }
             stop = clock();
             times[j] = stop - start;
-            if (res != 255) {
-                printf("compare fct returned != 255; pw might be: %s\n", secret);
+            if (res != -1) {
+                printf("compare fct returned != -1; pw might be: %s\n", secret);
             }
         }
         
