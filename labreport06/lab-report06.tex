@@ -35,7 +35,92 @@ TODO
 \addcontentsline{toc}{section}{2. TODO}
 \setcounter{subsection}{0}
 \subsection{}
-TODO
+\subsection{}
+        Um ein selbstsigniertes Zertifikat zu erzeugen, sind die folgenden Befehle notwendig:
+
+        \begin{verbatim}
+			openssl genrsa -out server.key 2048
+			openssl req -new -key server.key -out server.csr
+			openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+        \end{verbatim}
+
+        Mit dem ersten Befehl erzeugen wir einen neuen, 
+        2048-bit langen privaten
+        Schlüssel. 
+        Der zweite Befehl erstellt die
+        \textit{certificate signing request}, 
+        in der die Informationen enthalten
+        sind, die das Zertifikat später umfassen soll. 
+        Diese werden interaktiv
+        abgefragt. 
+        Als Common Name verwenden wir \texttt{vmsrv12.svslab}.
+
+        Im dritten Befehl verwenden wir schließlich 
+        den erstellten Private Key,
+        um aus der CSR ein Zertifikat zu generieren, 
+        das 365 Tage gültig ist.
+
+        Um dieses Zertifikat für den Apache-Server einzusetzen, ersetzen wir in
+        der Konfigurationsdatei die Pfade hinter \texttt{SSLCertificateFile} und
+        \texttt{SSLCertificateKeyFile} mit den Pfaden zum Zertifikat und dem
+        private key.
+
+        Um einen Missbrauch von Zertifikaten und damit auch ihre
+        Wirksamkeit sicherzustellen, werden selbsterstellten Zertifikaten
+        nicht vertraut. Vertrauenswürdige Zertifikate werden von
+        \textit{Certificate Authorities} ausgestellt, deren Aufgabe es
+        ist, rechtmäßig angefragte Zertifikate auszustellen und mit
+        Glaubwürdigkeit zu versehen sowie im Umkehrschluss unglaubwürdige
+        Zertifikatserstellungen zu erschweren.
+
+\subsection{}
+        Das Apache-Modul \textit{mod\_rewrite} ermöglicht Weiterleitungen einzurichten. Wir wollen alle Requests an HTTPS weiterleiten und erweitern die config daher um folgende Zeilen.
+        \footnote{Quelle: \url{https://wiki.apache.org/httpd/RewriteHTTPToHTTPS}}
+
+        \begin{verbatim}
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
+        \end{verbatim}
+
+        Mit dem ersten Befehl wird die Bearbeitung der Rewrite-Regeln eingeschaltet.
+        Danach wird geprüft, ob nicht bereits HTTPS verwendet wird, da damit die
+        Weiterleitung hinfällig wird. Schließlich wird die Rewrite-Regel definiert,
+        die dann weiterleitet. Die Optionen am Ende sind die Flags. \texttt{L}
+        gibt an, dass die Regel die letzte ist, die ausgeführt wird. \texttt{R}
+        spezifiziert, dass ein HTTP Redirect passieren soll.
+
+        Die Regel selbst ist ein regulärer Ausdruck, bei dem alles nach einem
+        optionalen ``\texttt{/}'' matched und in die HTTPS-URL eingesetzt wird.
+
+\subsection{}
+        Über die verschlüsselte Verbindung können wir die Zugangsdaten
+        selbstverständlich nicht mitlesen. Verwenden wir \textit{sslstrip} als
+        Proxy, so wird die Umleitung auf die verschlüsselte Verbindung verhindert
+        und wir können die Zugangsdaten recht komfortabel im Log-File nachlesen.
+
+        Die Sicherheit der Weiterleitung ist damit maximal als ``gut gemeinte''
+        Maßnahme für Endanwender gedacht, taugt aber nicht, ernsthafte Angriffe
+        abzuwehren. Hierzu sind weitere Maßnahmen nötig, wie beispielsweise HSTS.
+
+        \textit{HTTP Strict Transport Security (HSTS)} ist ein in RFC 6797%
+        \footnote{\url{https://tools.ietf.org/html/rfc6797}} beschriebener
+        Standard, der einen solchen Angriff verhindern kann. Wird HSTS aktiviert,
+        so können Seiten unter einer Domain, die HSTS setzt, nicht über eine
+        unverschlüsselte Verbindung abgerufen weden.
+        HSTS wird über einen Header aktiviert, der bei der Antwort mitgesendet
+        wird und etwa so aussieht:
+
+        \begin{verbatim}
+Strict-Transport-Security: max-age=15768000
+        \end{verbatim}
+
+        Damit wird HSTS im Browser strikt forciert und lässt sich auch für
+        den Endnutzer nicht wieder abschalten.
+        Mit dem \texttt{max-age}-Parameter wird das maximale Alter
+        in Sekunden angegeben. 15768000 Sekunden entsprechen etwa einem halben
+        Jahr, danach wird der Browser eine unverschlüsselte Verbindung prinzipiell
+        wieder erlauben, wenn nicht erneut ein HSTS-Header mitgesendet wird.
 
 \setcounter{section}{3}
 \section*{3. Unsichere selbstenwtickelte Verschlüsselungsalgorithmen}
