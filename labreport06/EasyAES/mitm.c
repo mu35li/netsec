@@ -19,20 +19,6 @@ const uint8_t ciphertext[16] = {
     0x9d, 0x47, 0xa5, 0x74
 };
 
-/*const uint8_t plaintext[16] = {*/
-    /*0x00, 0x00, 0x00, 0x00,*/
-    /*0x00, 0x00, 0x00, 0x00,*/
-    /*0x00, 0x00, 0x00, 0x00,*/
-    /*0x00, 0x00, 0x00, 0x00*/
-/*};*/
-
-/*const uint8_t ciphertext[16] = {*/
-    /*0x56, 0x6a, 0x77, 0xa1,*/
-    /*0x68, 0x36, 0x7d, 0xf8,*/
-    /*0x53, 0x46, 0x4c, 0x47,*/
-    /*0x02, 0xe4, 0x87, 0x4a*/
-/*};*/
-
 /* map a key to its encryption or decryption result */
 struct KeyRes {
     uint8_t * key;
@@ -47,22 +33,6 @@ struct KeyResStore {
 };
 
 int main(void) {
-    /* pseudo-code:
-     * for key1 in keys:
-     *     result1 = encrypt(plaintext, key1)
-     *     kr = KeyRes_new()
-     *     kr->key = key1
-     *     kr->res = result1
-     *     store(kr)
-     * for key2 in keys:
-     *     result2 = decrypt(ciphertext, key2)
-     *     if result2 == retrieve(result1):
-     *         print(key1)
-     *         print(key2)
-     *         return EXIT_SUCCESS;
-     *  return EXIT_FAILURE;
-     */
-
     /* init our key-result-store */
     KeyResStore *** store = (KeyResStore ***) calloc(256, sizeof(KeyResStore));
     CHECK_ALLOC(store);
@@ -380,12 +350,6 @@ void meet_in_the_middle(KeyResStore *** krs) {
             }
         }
 
-        /* fprintf(stderr, "finish checking key: ");
-        for (uint8_t i = 0; i < 15; i++) {
-            fprintf(stderr, "0x%02x, ", key[i]);
-        }
-        fprintf(stderr, "0x%02x\n", key[15]); */
-
         free(key);
         free(ct);
 
@@ -428,10 +392,6 @@ void meet_in_the_middle(KeyResStore *** krs) {
 
         #pragma omp parallel for shared(done)
         for (uint64_t i = 0; i < krs[ct[0]][ct[1]]->size; i++) {
-            /*counter++;
-            if (counter % 100000 == 0) {
-                fprintf(stderr, "%lu iterations completed.\n", counter);
-            }*/
 
             if (done) continue;
 
@@ -452,12 +412,6 @@ void meet_in_the_middle(KeyResStore *** krs) {
                 done = true;
             }
         }
-
-        /* fprintf(stderr, "finish checking key: ");
-        for (uint8_t i = 0; i < 15; i++) {
-            fprintf(stderr, "0x%02x, ", key[i]);
-        }
-        fprintf(stderr, "0x%02x\n", key[15]); */
 
         free(key);
         free(ct);

@@ -31,10 +31,9 @@
 TODO
 
 \setcounter{section}{2}
-\section*{2. TODO}
-\addcontentsline{toc}{section}{2. TODO}
-\setcounter{subsection}{0}
-\subsection{}
+\section*{2. CAs und Webserver-Zertifikate}
+\addcontentsline{toc}{section}{2. CAs und Webserver-Zertifikate}
+\setcounter{subsection}{1}
 \subsection{}
         Um ein selbstsigniertes Zertifikat zu erzeugen, sind die folgenden Befehle notwendig:
 
@@ -143,8 +142,11 @@ Hi Peter, hast du einen Geheimtipp fuer ein gutes Buch fuer mich? Gruss, Max
 \subsection{AdvaziCrypt - Denksport}
 Wenn wir davon ausgehen, dass der Key vollständig (wenn auch `verschlüsselt') in der Datei vorhanden ist,
 dann sind auf jeden Fall die letzten 10 Bytes des Ciphertexts die verschlüsselten Key-Bytes. Jetzt kann man
-auf die Anzahl der Padding-Bytes schließen, indem man darauf achtet, wann die hinteren Bytes aufhören, Teil
+auf die Anzahl der Padding-Bytes schließen, indem man darauf achtet, wann Bytes aufhören, in das Muster zu passen,
+und somit aufhören, Teil
 des vermeintlichen, verschlüsselten Keys zu sein. Man zählt also mit und schaut, wann ein Byte nicht mehr passt.
+Dann kennt man den Wert, mit dem man XORen muss, und kann den Key entschlüsseln. Danach kann man mit dem entschlüssselten Key
+den Rest der Datei entschlüsseln.
 Für die genaue Implementation, siehe unser Skript im Appendix.
 
 \subsection{AdvaziCrypt}
@@ -159,9 +161,49 @@ Hi Peter, worum geht es in dem Buch? Ciao, Max.
 Hi Max, das ist ein super Buch, das viele Krypto-Themen abdeckt. Gruss Peter
 \end{quote}
 
+\setcounter{section}{4}
+\section*{4. EasyAES}
+\addcontentsline{toc}{section}{4. EasyAES}
+\setcounter{subsection}{0}
+
+Da wir Plaintext und Ciphertext einer doppelten AES-Verschlüsselung kennen, können wir zunächst alle
+Zwischenresultate ermitteln, die sich ergeben, wenn man den Plaintext einmal verschlüsselt, und dann
+mit einfach Entschlüsselungen des Ciphertexts vergleichen. Dies funktioniert einigermaßen schnell,
+wenn wir Lookup-Zeiten bei dem Vergleich minimieren. Wir haben den Hauptteil unseres C-Programms im Appendix
+angehängt. Das gesamte Projekt kann hier gefunden werden: \url{https://github.com/mu35li/netsec/tree/master/labreport06/EasyAES}.
+
+
+\setcounter{section}{5}
+\section*{5. Timing-Attack}
+\addcontentsline{toc}{section}{5. Timing-Attack}
+\setcounter{subsection}{0}
+
+Unsere Timing-Attack ist im Anhang zu finden. Wir würden gerne an dieser Stelle einige Erkenntnisse auflisten.
+Zunächst haben wir die Object-File disassemblet. Dies ist sehr einfach mit \texttt{\$ objdump -d password\_compare.o},
+oder etwas komplizierter, aber im Ergebnis übersichtlicher mit \textit{radare2}.
+
+Der Assembly können wir entnehmen, dass die Funktion keinen Boolean returnt, sondern einen Int. Obwohl auf dem
+Aufgabenblatt nicht eindeutig dargestellt war, welchen Returnwert die Funktion hat, wurde durch die gezeigte
+Java-Funktion Boolean impliziert. Bei einem korrekten Passwort wird $0$ zurückgegeben, andernfalls $-1$.
+Dies ist ein wichtiges Detail, denn in C gelten alle Integer \textit{ungleich} $0$ als wahr, und nur $0$ als falsch.
+Hat man also nur den Wiedergabe-Wert der Funktion z.B. in einer \texttt{if}-Klausel stehen, wird man sich wundern.
+Demnach ist die Aussage über \textit{POSIX}-Erfüllung ebenfalls diskutabel.
+
+Weiterhin ist der Assembly zu entnehmen, dass die Länge des Passworts gar nicht überprüft wird. Dafür gibt es gar nicht genügend
+Loops. Dies macht uns den Angriff recht einfach; wir nehmen einfach einen langen String, und justieren an einer Stelle
+die Zeichen so lange, bis wir eine eindeutige Spike in der Zeit sehen, und akzeptieren diesen Buchstaben dann als richtig.
+Sobald die Funktion $0$ widergibt, sind wir durch.
+
+Das Passwort lautet: \texttt{Licht-B()6eN}. Das Password lautet ebenfalls: \texttt{Licht-B()6eN1234lalalala};
+tatsächlich wird jeder String, der mit \texttt{Licht-B()6eN} \textit{beginnt}, und beliebig weitergeht, von der Funktion akzeptiert.
+
+Unser Code ist im Appendix zu finden. Zu beachten ist auch dass dem Compiler \texttt{-O0} übergeben wird,
+damit er nicht optimiert und somit die Zeiten verfälscht.
+
+
 \newpage
 \section*{Appendix}
-\subsection{3. Skripte}
+\subsection{3. Selbstentwickelte Crypto}
 \subsubsection*{Bazi Crack}
 \inputminted{python}{crack_bazi.py}
 
@@ -170,4 +212,15 @@ Hi Max, das ist ein super Buch, das viele Krypto-Themen abdeckt. Gruss Peter
 \subsubsection*{Advazi Crack}
 \inputminted{python}{crack_advazi.py}
 
+\newpage
+
+\subsection{4. EasyAES}
+\inputminted{C}{EasyAES/mitm.c}
+
+\subsection{5. Timing-Attack}
+\subsubsection*{timing.h}
+\inputminted{C}{timingAngriff/timing.h}
+
+\subsubsection*{timing.c}
+\inputminted{C}{timingAngriff/timing.c}
 \end{document}
